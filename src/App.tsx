@@ -16,7 +16,9 @@ const entries = (rawData as any[]).map(fromRaw);
 function PoolApp() {
   const { data: livePoints, isFetching } = useLivePoints(entries);
   const { dark, toggle } = useDarkMode();
-  const [view, setView] = useState<'cards' | 'grid'>('cards');
+  const [view, setView] = useState<'cards' | 'grid'>(
+    () => window.innerWidth >= 768 ? 'grid' : 'cards'
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -26,27 +28,39 @@ function PoolApp() {
         <TodayMatches />
 
         {/* View toggle */}
-        <div className="flex gap-1 mb-3 bg-gray-200 dark:bg-gray-700 rounded-lg p-1 w-fit">
-          <button
-            onClick={() => setView('cards')}
-            className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              view === 'cards'
-                ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-            }`}
-          >
-            🃏 Cards
-          </button>
-          <button
-            onClick={() => setView('grid')}
-            className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              view === 'grid'
-                ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-            }`}
-          >
-            📊 Grid
-          </button>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex gap-1 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+            <button
+              onClick={() => setView('cards')}
+              className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                view === 'cards'
+                  ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+            >
+              🃏 Cards
+            </button>
+            <button
+              onClick={() => setView('grid')}
+              className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                view === 'grid'
+                  ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+            >
+              📊 Grid
+            </button>
+          </div>
+          {view === 'grid' && (
+            <span className="text-xs text-gray-400 dark:text-gray-500 sm:hidden">
+              ← scroll for all picks
+            </span>
+          )}
+          {view === 'cards' && (
+            <span className="text-xs text-gray-400 dark:text-gray-500 hidden sm:inline">
+              Grid view best on wider screens
+            </span>
+          )}
         </div>
 
         {view === 'cards'

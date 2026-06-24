@@ -36,16 +36,16 @@ export function StandingsGrid({ entries, livePoints }: Props) {
       <table className="w-full text-xs whitespace-nowrap border-collapse">
         <thead>
           <tr>
-            <th className="sticky left-0 z-20 bg-gray-800 text-white px-3 py-2 text-left w-8">#</th>
-            <th className="sticky left-8 z-20 bg-gray-800 text-white px-3 py-2 text-left min-w-[160px]">Team Name</th>
+            <th className="sticky left-0 z-20 bg-gray-800 text-white px-2 py-2 text-center w-10">#</th>
+            <th className="sticky left-10 z-20 bg-gray-800 text-white px-3 py-2 text-left min-w-[180px]">Team Name</th>
             {['Team 1', 'Team 2', 'Team 3'].map((h, i) => (
-              <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide`}>{h}</th>
+              <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide min-w-[130px]`}>{h}</th>
             ))}
             {['Player 1', 'Player 2', 'Player 3'].map((h, i) => (
-              <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide`}>{h}</th>
+              <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide min-w-[130px]`}>{h}</th>
             ))}
             {['Keeper 1', 'Keeper 2', 'Keeper 3'].map((h, i) => (
-              <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide`}>{h}</th>
+              <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide min-w-[130px]`}>{h}</th>
             ))}
             <th className="bg-yellow-700 text-white px-3 py-2 text-center">Pts</th>
           </tr>
@@ -65,11 +65,11 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                 className="group hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
                 {/* Rank */}
-                <td className={`sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-3 py-2 font-black text-center text-gray-500 dark:text-gray-400 ${borderClass}`}>
+                <td className={`sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-2 py-2 font-black text-center text-gray-500 dark:text-gray-400 w-10 ${borderClass}`}>
                   {rank <= 3 ? MEDALS[rank - 1] : rank}
                 </td>
                 {/* Name */}
-                <td className="sticky left-8 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 min-w-[160px]">
+                <td className="sticky left-10 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 min-w-[180px]">
                   {entry.name}
                 </td>
                 {/* Picks */}
