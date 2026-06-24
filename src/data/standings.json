@@ -1,0 +1,925 @@
+[
+  {
+    "name": "Balze Heuga",
+    "teams": [
+      [
+        "🇪🇸Spain",
+        13
+      ],
+      [
+        "🇺🇸USA",
+        23
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇲🇽Raul Jimeneź",
+        5
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇪🇸Sìmon",
+        11
+      ],
+      [
+        "🇯🇵Suzuki",
+        10
+      ],
+      [
+        "🇨🇮Fofana",
+        12
+      ]
+    ],
+    "points": 127
+  },
+  {
+    "name": "Johnny Futbol DiLivio",
+    "teams": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿England",
+        10
+      ],
+      [
+        "🇺🇾Uruguay",
+        3
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿Kane",
+        10
+      ],
+      [
+        "🇪🇨E. Valencia",
+        0
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿Pickford",
+        9
+      ],
+      [
+        "🇺🇾Muslera",
+        4
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 77
+  },
+  {
+    "name": "Penrod Loves his friend's Balze",
+    "teams": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿England",
+        10
+      ],
+      [
+        "🇨🇭Switzerland",
+        8
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇺🇸Balogun",
+        10
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🏴󠁧󠁢󠁳󠁣󠁴󠁿Gunn",
+        8
+      ]
+    ],
+    "points": 110
+  },
+  {
+    "name": "Wilder",
+    "teams": [
+      [
+        "🇫🇷France",
+        15
+      ],
+      [
+        "🇪🇨Ecuador",
+        3
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇪🇨E. Valencia",
+        0
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇫🇷Maignan",
+        11
+      ],
+      [
+        "🇯🇵Suzuki",
+        10
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 100
+  },
+  {
+    "name": "Shmeeve's' FutBalzers",
+    "teams": [
+      [
+        "🇦🇷Argentina",
+        17
+      ],
+      [
+        "🇺🇾Uruguay",
+        3
+      ],
+      [
+        "🇸🇪Sweden",
+        8
+      ]
+    ],
+    "players": [
+      [
+        "🇪🇸Yamal",
+        5
+      ],
+      [
+        "🇺🇾Nunez",
+        0
+      ],
+      [
+        "🇸🇪Gyokeres",
+        8
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇯🇵Suzuki",
+        10
+      ],
+      [
+        "🇸🇪Nordfeldt",
+        6
+      ]
+    ],
+    "points": 70,
+    "note": "Argentina scored as 17 — the +8 group-winner bonus isn’t earned yet (advanced, not clinched Group J). Restores to 25 when they top the group."
+  },
+  {
+    "name": "K-19",
+    "teams": [
+      [
+        "🇫🇷France",
+        15
+      ],
+      [
+        "🇸🇳Senegal",
+        3
+      ],
+      [
+        "🇨🇦Canada",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇸🇳Mane",
+        3
+      ],
+      [
+        "🇸🇪Gyokeres",
+        8
+      ]
+    ],
+    "keepers": [
+      [
+        "🇫🇷Maignan",
+        11
+      ],
+      [
+        "🇸🇳Mendy",
+        8
+      ],
+      [
+        "🇭🇹Placide",
+        3
+      ]
+    ],
+    "points": 84
+  },
+  {
+    "name": "Linc",
+    "teams": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿England",
+        10
+      ],
+      [
+        "🇲🇽Mexico",
+        23
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿Kane",
+        10
+      ],
+      [
+        "🇸🇳Mane",
+        3
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿Pickford",
+        9
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 104
+  },
+  {
+    "name": "McNutt",
+    "teams": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿England",
+        10
+      ],
+      [
+        "🇺🇾Uruguay",
+        3
+      ],
+      [
+        "🇸🇪Sweden",
+        8
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇪🇨Caicedo",
+        0
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇺🇾Muslera",
+        4
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 86
+  },
+  {
+    "name": "Herr Wagner der Größte",
+    "teams": [
+      [
+        "🇲🇦Morocco",
+        8
+      ],
+      [
+        "🇲🇽Mexico",
+        23
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿Kane",
+        10
+      ],
+      [
+        "🇨🇭Embolo",
+        5
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 108
+  },
+  {
+    "name": "Justin",
+    "teams": [
+      [
+        "🇫🇷France",
+        15
+      ],
+      [
+        "🇪🇨Ecuador",
+        3
+      ],
+      [
+        "🇨🇮Ivory Coast",
+        8
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇪🇨E. Valencia",
+        0
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇪🇨Galindez",
+        9
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 96
+  },
+  {
+    "name": "Captain JARRR",
+    "teams": [
+      [
+        "🇧🇷Brazil",
+        10
+      ],
+      [
+        "🇯🇵Japan",
+        12
+      ],
+      [
+        "🇩🇿Algeria",
+        5
+      ]
+    ],
+    "players": [
+      [
+        "🇦🇷Alvarez",
+        0
+      ],
+      [
+        "🇸🇳Mane",
+        3
+      ],
+      [
+        "🇸🇪Gyokeres",
+        8
+      ]
+    ],
+    "keepers": [
+      [
+        "🇧🇷Alisson",
+        11
+      ],
+      [
+        "🇯🇵Suzuki",
+        10
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 67
+  },
+  {
+    "name": "Messi all day",
+    "teams": [
+      [
+        "🇪🇸Spain",
+        13
+      ],
+      [
+        "🇺🇾Uruguay",
+        3
+      ],
+      [
+        "🇨🇦 Canada",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇦🇷 Messi",
+        25
+      ],
+      [
+        "🇯🇵 Ueda",
+        13
+      ],
+      [
+        "🇸🇪Gyokeres",
+        8
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🏴󠁧󠁢󠁳󠁣󠁴󠁿 Gunn",
+        8
+      ]
+    ],
+    "points": 104
+  },
+  {
+    "name": "Peter (Jenn Dumm Dumm)",
+    "teams": [
+      [
+        "🇦🇷Argentina",
+        17
+      ],
+      [
+        "🇨🇭Switzerland",
+        8
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇪🇸Yamal",
+        5
+      ],
+      [
+        "🇲🇽Raul Jimeneź",
+        5
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 97,
+    "note": "Argentina scored as 17 — the +8 group-winner bonus isn’t earned yet (advanced, not clinched Group J). Restores to 25 when they top the group."
+  },
+  {
+    "name": "Anonymous Dumbo Octopus",
+    "teams": [
+      [
+        "🇫🇷France",
+        15
+      ],
+      [
+        "🇨🇭Switzerland",
+        8
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇨🇭Embolo",
+        8
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇫🇷Maignan",
+        11
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 111
+  },
+  {
+    "name": "Tom Atwood",
+    "teams": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿England",
+        10
+      ],
+      [
+        "🇪🇨Ecuador",
+        3
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿Kane",
+        10
+      ],
+      [
+        "🇺🇸 Pulisic",
+        3
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 88
+  },
+  {
+    "name": "Seattle Seleção",
+    "teams": [
+      [
+        "🇧🇷Brazil",
+        10
+      ],
+      [
+        "🇺🇸USA",
+        23
+      ],
+      [
+        "🇸🇪Sweden",
+        8
+      ]
+    ],
+    "players": [
+      [
+        "🇧🇷Raphinha",
+        0
+      ],
+      [
+        "🇹🇷Guler",
+        0
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇧🇷Alisson",
+        11
+      ],
+      [
+        "🇪🇨Galindez",
+        9
+      ],
+      [
+        "🇨🇮Fofana",
+        12
+      ]
+    ],
+    "points": 93
+  },
+  {
+    "name": "Krafty Cole",
+    "teams": [
+      [
+        "🇫🇷France",
+        15
+      ],
+      [
+        "🇯🇵Japan",
+        12
+      ],
+      [
+        "🇨🇦Canada",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Dembélé",
+        8
+      ],
+      [
+        "🇯🇵Kubo",
+        3
+      ],
+      [
+        "🇪🇬Salah",
+        11
+      ]
+    ],
+    "keepers": [
+      [
+        "🇫🇷Maignan",
+        11
+      ],
+      [
+        "🇯🇵Suzuki",
+        10
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 91
+  },
+  {
+    "name": "Franco",
+    "teams": [
+      [
+        "🇪🇸Spain",
+        13
+      ],
+      [
+        "🇲🇽Mexico",
+        23
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇺🇸Balogun",
+        10
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇲🇽Rangel",
+        16
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 136,
+    "note": "Corrected to 136 from the sheet’s 126 (data-entry error). Picks verified vs stats: Mexico 23 (clinched +8), Mbappé 20 (4 goals), Haaland 20, Rangel 16 (2 clean sheets + saves incl. confirmed double-save vs S. Korea)."
+  },
+  {
+    "name": "The Pope's on Our Side. Knicks in Five.",
+    "teams": [
+      [
+        "🇪🇸Spain",
+        13
+      ],
+      [
+        "🇺🇸USA",
+        23
+      ],
+      [
+        "🇨🇮Ivory Coast",
+        7
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇺🇸 Pulisic",
+        3
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇨🇭Kobel",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 115
+  },
+  {
+    "name": "Mike Scigliano",
+    "teams": [
+      [
+        "🇧🇷Brazil",
+        10
+      ],
+      [
+        "🇺🇾Uruguay",
+        3
+      ],
+      [
+        "🇳🇴Norway",
+        13
+      ]
+    ],
+    "players": [
+      [
+        "🇫🇷Mbappé",
+        20
+      ],
+      [
+        "🇺🇾Nunez",
+        0
+      ],
+      [
+        "🇳🇴Haaland",
+        20
+      ]
+    ],
+    "keepers": [
+      [
+        "🇦🇷Martínez",
+        13
+      ],
+      [
+        "🇺🇸Freese",
+        8
+      ],
+      [
+        "🇳🇴Nyland",
+        8
+      ]
+    ],
+    "points": 95
+  }
+]

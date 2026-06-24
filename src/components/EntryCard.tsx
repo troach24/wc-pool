@@ -1,0 +1,153 @@
+import { useState } from 'react';
+import type { Entry } from '../lib/types';
+
+const MEDALS = ['🥇', '🥈', '🥉'];
+
+function PickChip({
+  label,
+  points,
+  delta,
+}: {
+  label: string;
+  points: number;
+  delta?: number;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 py-1">
+      <span className="text-sm text-gray-700">{label}</span>
+      <div className="flex items-center gap-1">
+        {delta ? (
+          <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full animate-pulse">
+            +{delta}▲
+          </span>
+        ) : null}
+        <span
+          className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${
+            points === 0 && !delta
+              ? 'bg-gray-100 text-gray-400'
+              : 'bg-blue-50 text-blue-700'
+          }`}
+        >
+          {delta ? points + delta : `+${points}`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+type Props = {
+  entry: Entry;
+  rank: number;
+  liveTotal?: number;
+  pickDeltas?: Map<string, number>;
+};
+
+export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
+  const [open, setOpen] = useState(false);
+
+  const displayTotal = liveTotal ?? entry.points;
+  const hasLiveDelta = liveTotal !== undefined && liveTotal !== entry.points;
+
+  const borderClass =
+    rank === 1
+      ? 'border-l-4 border-l-yellow-400'
+      : rank === 2
+      ? 'border-l-4 border-l-gray-400'
+      : rank === 3
+      ? 'border-l-4 border-l-amber-600'
+      : '';
+
+  return (
+    <div
+      className={`bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow ${borderClass}`}
+    >
+      <button
+        className="w-full flex items-center gap-3 px-4 py-3 text-left"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="text-lg font-black min-w-[28px] text-center">
+          {rank <= 3 ? (
+            MEDALS[rank - 1]
+          ) : (
+            <span className="text-gray-500 text-base">{rank}</span>
+          )}
+        </span>
+        <span className="flex-1 font-semibold text-gray-800 text-sm">
+          {entry.name}
+        </span>
+        {entry.note && (
+          <span title={entry.note} className="text-sm cursor-help">
+            ℹ️
+          </span>
+        )}
+        <div className="flex items-center gap-1.5">
+          {hasLiveDelta && (
+            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+              +{liveTotal! - entry.points} live
+            </span>
+          )}
+          <span className="text-2xl font-black text-[#1a3a6b]">
+            {displayTotal}
+            <span className="text-xs text-gray-400 font-normal ml-0.5">pts</span>
+          </span>
+        </div>
+        <span
+          className={`text-gray-400 text-xs transition-transform ${open ? 'rotate-180' : ''}`}
+        >
+          ▼
+        </span>
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-100 px-4 pb-4 pt-3">
+          {entry.note && (
+            <div className="mb-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              ℹ️ {entry.note}
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">
+                ⚽ Teams
+              </h4>
+              {entry.teams.map((p, i) => (
+                <PickChip
+                  key={i}
+                  label={p.label}
+                  points={p.points}
+                  delta={pickDeltas?.get(p.label)}
+                />
+              ))}
+            </div>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">
+                🌟 Players
+              </h4>
+              {entry.players.map((p, i) => (
+                <PickChip
+                  key={i}
+                  label={p.label}
+                  points={p.points}
+                  delta={pickDeltas?.get(p.label)}
+                />
+              ))}
+            </div>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">
+                🧤 Keepers
+              </h4>
+              {entry.keepers.map((p, i) => (
+                <PickChip
+                  key={i}
+                  label={p.label}
+                  points={p.points}
+                  delta={pickDeltas?.get(p.label)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
