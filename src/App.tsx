@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { VerifiedBanner } from './components/VerifiedBanner';
-import { TodayMatches } from './components/TodayMatches';
+import { LiveBanner } from './components/LiveBanner';
 import { Leaderboard } from './components/Leaderboard';
 import { StandingsGrid } from './components/StandingsGrid';
 import { useLivePoints } from './hooks/useLivePoints';
@@ -22,10 +22,12 @@ function PoolApp() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header liveMatches={livePoints?.liveMatches} dark={dark} onToggleDark={toggle} />
+      <Header dark={dark} onToggleDark={toggle} />
       <main className={`mx-auto px-4 py-4 ${view === 'grid' ? 'max-w-7xl' : 'max-w-3xl'}`}>
+        {livePoints && (
+          <LiveBanner matchImpacts={livePoints.matchImpacts} isFetching={isFetching} />
+        )}
         <VerifiedBanner lastUpdated={livePoints?.lastUpdated} isFetching={isFetching} />
-        <TodayMatches />
 
         {/* View toggle */}
         <div className="flex items-center gap-3 mb-3">

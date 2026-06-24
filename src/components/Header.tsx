@@ -1,39 +1,59 @@
-import type { WCEvent } from '../lib/api';
-
 type Props = {
-  liveMatches?: WCEvent[];
   dark: boolean;
   onToggleDark: () => void;
 };
 
-export function Header({ liveMatches = [], dark, onToggleDark }: Props) {
+export function Header({ dark, onToggleDark }: Props) {
   return (
-    <header className="bg-gradient-to-r from-[#1a3a6b] to-[#c8102e] text-white px-4 py-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-3xl">⚽</span>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold leading-tight">World Cup 2026 Pool Standings</h1>
-            <p className="text-xs opacity-80 mt-0.5">Blaze-Heuga Pool · 20 entries · tap for full breakdown</p>
+    <header className="relative overflow-hidden bg-[#0a1628] px-4 py-5">
+      {/* Decorative pitch rings */}
+      <div className="pointer-events-none absolute -top-12 -right-8 h-44 w-44 rounded-full border-[28px] border-white/[0.04]" />
+      <div className="pointer-events-none absolute -bottom-16 right-12 h-28 w-28 rounded-full border-[20px] border-white/[0.03]" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(155deg, #0a1628 0%, #1a3a6b 58%, #8b1a2a 100%)',
+        }}
+      />
+
+      <div className="relative mx-auto max-w-7xl">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="font-display text-[10px] uppercase tracking-[0.28em] text-white/45">
+              Heuge Balze · World Cup 2026 Pool
+            </div>
+            <h1 className="font-display text-3xl font-bold uppercase leading-[0.95] tracking-wide text-white sm:text-4xl">
+              World Cup{' '}
+              <span className="text-[#f0a500]">Standings</span>
+            </h1>
+            <p className="mt-1 text-xs text-white/55">
+              20 entries · Final July 19, 2026
+            </p>
           </div>
+
           <button
             onClick={onToggleDark}
-            className="text-lg bg-white/15 hover:bg-white/25 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-base transition-colors hover:bg-white/20"
             aria-label="Toggle dark mode"
           >
             {dark ? '☀️' : '🌙'}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-3">
-          <span className="bg-white/15 rounded-full px-3 py-1 text-xs">
-            💰 Pot $1,500 · 1st $1,000 · 2nd $350 · 3rd $150
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full border border-[#f0a500]/30 bg-[#f0a500]/15 px-3 py-1 text-xs font-medium text-[#f0a500]">
+            🏆 $1,500 pot
           </span>
-          {liveMatches.map((m) => (
-            <span key={m.id} className="bg-red-500/80 rounded-full px-3 py-1 text-xs font-semibold animate-pulse">
-              🔴 LIVE: {m.homeTeam.name} {m.homeScore.current}–{m.awayScore.current} {m.awayTeam.name}
-            </span>
-          ))}
+          <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
+            1st $1,000
+          </span>
+          <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
+            2nd $350
+          </span>
+          <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
+            3rd $150
+          </span>
         </div>
       </div>
     </header>

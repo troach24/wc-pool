@@ -131,3 +131,41 @@ export function findMatchingApiName(
   }
   return null;
 }
+
+export type PickImpact = { label: string; points: number };
+
+// Given a single match's stats and the full set of pool pick labels,
+// return which pool picks earned points in THIS match (for the live banner).
+export function computeMatchImpacts(
+  matchStats: LiveStats,
+  matchTeamPoints: Map<string, number>,
+  poolPickLabels: Iterable<string>
+): PickImpact[] {
+  const impacts: PickImpact[] = [];
+  const seen = new Set<string>();
+
+  for (const label of poolPickLabels) {
+    if (seen.has(label)) continue;
+
+    const playerMatch = findMatchingApiName(label, matchStats.players.keys());
+    if (playerMatch) {
+      const pts = computePlayerPoints(matchStats.players.get(playerMatch)!);
+      if (pts > 0) {
+        impacts.push({ label, points: pts });
+        seen.add(label);
+      }
+      continue;
+    }
+
+    const teamMatch = findMatchingApiName(label, matchTeamPoints.keys());
+    if (teamMatch) {
+      const pts = matchTeamPoints.get(teamMatch) ?? 0;
+      if (pts > 0) {
+        impacts.push({ label, points: pts });
+        seen.add(label);
+      }
+    }
+  }
+
+  return impacts.sort((a, b) => b.points - a.points);
+}

@@ -82,11 +82,11 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
         )}
         <div className="flex items-center gap-1.5">
           {hasLiveDelta && (
-            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
               +{liveTotal! - entry.points} live
             </span>
           )}
-          <span className="text-2xl font-black text-[#1a3a6b]">
+          <span className="font-display text-2xl font-bold text-[#1a3a6b] dark:text-blue-300 tabular-nums">
             {displayTotal}
             <span className="text-xs text-gray-400 font-normal ml-0.5">pts</span>
           </span>

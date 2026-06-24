@@ -1,37 +1,39 @@
-const BASE = 'https://sportapi7.p.rapidapi.com/api/v1';
+const BASE = 'https://v3.football.api-sports.io';
 const HEADERS = {
-  'X-RapidAPI-Key': import.meta.env.VITE_RAPIDAPI_KEY,
-  'X-RapidAPI-Host': 'sportapi7.p.rapidapi.com',
+  'x-apisports-key': import.meta.env.VITE_APIFOOTBALL_KEY,
 };
 
-const WC_TOURNAMENT_ID = 16;
-const WC_SEASON_ID = 58210;
+const WC_LEAGUE_ID = 1;
+const WC_SEASON = 2026;
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { headers: HEADERS });
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
-  return res.json();
+  const json = await res.json();
+  if (json.errors && Object.keys(json.errors).length) {
+    throw new Error(`API error: ${JSON.stringify(json.errors)}`);
+  }
+  return json.response as T;
 }
 
+// ---- Normalized shapes used across the app ----
+
 export type Incident = {
-  incidentType: 'goal' | 'card' | 'substitution' | 'period' | 'injuryTime' | 'varDecision' | string;
-  incidentClass?: 'yellow' | 'red' | 'regular' | 'penalty' | string;
-  player?: { name: string; id: number };
-  assist1?: { name: string; id: number };
+  incidentType: 'goal' | 'card' | string;
+  incidentClass?: 'yellow' | 'red' | string;
+  player?: { name: string };
+  assist1?: { name: string };
   isHome?: boolean;
-  time?: number;
-  id?: number;
 };
 
 export type WCEvent = {
   id: number;
-  slug: string;
   homeTeam: { name: string; id: number };
   awayTeam: { name: string; id: number };
   homeScore: { current: number };
   awayScore: { current: number };
-  status: { description: string; type: string };
-  tournament: { uniqueTournament?: { id: number } };
+  status: { description: string; type: 'notstarted' | 'inprogress' | 'finished' };
+  tournament: { groupSign?: string };
   startTimestamp: number;
 };
 
@@ -42,25 +44,135 @@ export type StandingRow = {
   scoresFor: number;
   scoresAgainst: number;
   matches: number;
-  losses: number;
-  draws: number;
+  group?: string;
 };
 
-export async function fetchMatchesForDate(date: string): Promise<WCEvent[]> {
-  const data = await get<{ events: WCEvent[] }>(`/sport/football/scheduled-events/${date}`);
-  return (data.events ?? []).filter(
-    (e) => e.tournament?.uniqueTournament?.id === WC_TOURNAMENT_ID
+// ---- API-Football raw shapes (only fields we read) ----
+
+type AFFixture = {
+  fixture: {
+    id: number;
+    timestamp: number;
+    status: { long: string; short: string; elapsed: number | null };
+  };
+  teams: {
+    home: { id: number; name: string };
+    away: { id: number; name: string };
+  };
+  goals: { home: number | null; away: number | null };
+  league: { round: string };
+};
+
+type AFEvent = {
+  type: string;
+  detail: string;
+  player: { name: string | null };
+  assist: { name: string | null };
+  team: { id: number };
+};
+
+const LIVE_CODES = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'INT']);
+const DONE_CODES = new Set(['FT', 'AET', 'PEN']);
+
+function mapStatus(short: string): WCEvent['status']['type'] {
+  if (LIVE_CODES.has(short)) return 'inprogress';
+  if (DONE_CODES.has(short)) return 'finished';
+  return 'notstarted';
+}
+
+function shortStatusLabel(short: string, elapsed: number | null): string {
+  if (short === 'HT') return 'HT';
+  if (short === '1H') return elapsed ? `${elapsed}'` : '1st';
+  if (short === '2H') return elapsed ? `${elapsed}'` : '2nd';
+  if (short === 'ET') return elapsed ? `${elapsed}'` : 'ET';
+  if (DONE_CODES.has(short)) return 'FT';
+  return short;
+}
+
+function toWCEvent(f: AFFixture, groupByTeam: Map<number, string>): WCEvent {
+  return {
+    id: f.fixture.id,
+    homeTeam: { name: f.teams.home.name, id: f.teams.home.id },
+    awayTeam: { name: f.teams.away.name, id: f.teams.away.id },
+    homeScore: { current: f.goals.home ?? 0 },
+    awayScore: { current: f.goals.away ?? 0 },
+    status: {
+      description: shortStatusLabel(f.fixture.status.short, f.fixture.status.elapsed),
+      type: mapStatus(f.fixture.status.short),
+    },
+    tournament: { groupSign: groupByTeam.get(f.teams.home.id) },
+    startTimestamp: f.fixture.timestamp,
+  };
+}
+
+// ---- Public fetchers ----
+
+export async function fetchWCStandings(): Promise<StandingRow[]> {
+  type Resp = Array<{
+    league: {
+      standings: Array<
+        Array<{
+          rank: number;
+          group: string;
+          team: { id: number; name: string };
+          all: { played: number; win: number; goals: { for: number; against: number } };
+        }>
+      >;
+    };
+  }>;
+  const resp = await get<Resp>(`/standings?league=${WC_LEAGUE_ID}&season=${WC_SEASON}`);
+  const groups = resp[0]?.league.standings ?? [];
+  return groups.flatMap((g) =>
+    g.map((r) => ({
+      team: { name: r.team.name, id: r.team.id },
+      position: r.rank,
+      wins: r.all.win,
+      scoresFor: r.all.goals.for,
+      scoresAgainst: r.all.goals.against,
+      matches: r.all.played,
+      group: r.group,
+    }))
   );
 }
 
-export async function fetchMatchIncidents(eventId: number): Promise<Incident[]> {
-  const data = await get<{ incidents: Incident[] }>(`/event/${eventId}/incidents`);
-  return data.incidents ?? [];
+// Returns all WC fixtures plus a team→group-letter map (from standings groups).
+export async function fetchWCFixtures(
+  groupByTeam: Map<number, string>
+): Promise<WCEvent[]> {
+  const resp = await get<AFFixture[]>(`/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}`);
+  return resp.map((f) => toWCEvent(f, groupByTeam));
 }
 
-export async function fetchGroupStandings(): Promise<StandingRow[]> {
-  const data = await get<{ standings: { rows: StandingRow[] }[] }>(
-    `/unique-tournament/${WC_TOURNAMENT_ID}/season/${WC_SEASON_ID}/standings/total`
-  );
-  return (data.standings ?? []).flatMap((g) => g.rows ?? []);
+export async function fetchFixtureEvents(fixtureId: number): Promise<Incident[]> {
+  const resp = await get<AFEvent[]>(`/fixtures/events?fixture=${fixtureId}`);
+  const out: Incident[] = [];
+  for (const e of resp) {
+    if (e.type === 'Goal') {
+      if (e.detail === 'Own Goal') continue; // doesn't credit the scorer
+      if (e.detail === 'Missed Penalty') continue;
+      out.push({
+        incidentType: 'goal',
+        player: e.player.name ? { name: e.player.name } : undefined,
+        assist1: e.assist.name ? { name: e.assist.name } : undefined,
+      });
+    } else if (e.type === 'Card') {
+      const cls = e.detail === 'Red Card' ? 'red' : 'yellow';
+      out.push({
+        incidentType: 'card',
+        incidentClass: cls,
+        player: e.player.name ? { name: e.player.name } : undefined,
+      });
+    }
+  }
+  return out;
+}
+
+// Builds team-id → group-letter ("A", "B", …) from standings group names.
+export function groupLetterMap(standings: StandingRow[]): Map<number, string> {
+  const m = new Map<number, string>();
+  for (const r of standings) {
+    const letter = r.group?.replace(/^Group\s+/i, '').trim();
+    if (letter) m.set(r.team.id, letter);
+  }
+  return m;
 }

@@ -1,2 +1,10 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: 'Oswald', system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
