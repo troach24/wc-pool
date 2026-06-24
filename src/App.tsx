@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { VerifiedBanner } from './components/VerifiedBanner';
 import { TodayMatches } from './components/TodayMatches';
 import { Leaderboard } from './components/Leaderboard';
+import { StandingsGrid } from './components/StandingsGrid';
 import { useLivePoints } from './hooks/useLivePoints';
 import { useDarkMode } from './hooks/useDarkMode';
 import { fromRaw } from './lib/adapters';
@@ -14,15 +16,45 @@ const entries = (rawData as any[]).map(fromRaw);
 function PoolApp() {
   const { data: livePoints, isFetching } = useLivePoints(entries);
   const { dark, toggle } = useDarkMode();
+  const [view, setView] = useState<'cards' | 'grid'>('cards');
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header liveMatches={livePoints?.liveMatches} dark={dark} onToggleDark={toggle} />
-      <main className="max-w-3xl mx-auto px-4 py-4">
+      <main className={`mx-auto px-4 py-4 ${view === 'grid' ? 'max-w-7xl' : 'max-w-3xl'}`}>
         <VerifiedBanner lastUpdated={livePoints?.lastUpdated} isFetching={isFetching} />
         <TodayMatches />
-        <Leaderboard entries={entries} livePoints={livePoints} />
-        <p className="text-center text-xs text-gray-400 mt-4 pb-6">
+
+        {/* View toggle */}
+        <div className="flex gap-1 mb-3 bg-gray-200 dark:bg-gray-700 rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setView('cards')}
+            className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              view === 'cards'
+                ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            🃏 Cards
+          </button>
+          <button
+            onClick={() => setView('grid')}
+            className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              view === 'grid'
+                ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            📊 Grid
+          </button>
+        </div>
+
+        {view === 'cards'
+          ? <Leaderboard entries={entries} livePoints={livePoints} />
+          : <StandingsGrid entries={entries} livePoints={livePoints} />
+        }
+
+        <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4 pb-6">
           Keeper save counts from organizer sheet · not independently published ·
           player/team points from live incident data
         </p>
