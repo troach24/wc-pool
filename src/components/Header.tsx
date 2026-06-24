@@ -1,17 +1,28 @@
 import type { WCEvent } from '../lib/api';
 
-type Props = { liveMatches?: WCEvent[] };
+type Props = {
+  liveMatches?: WCEvent[];
+  dark: boolean;
+  onToggleDark: () => void;
+};
 
-export function Header({ liveMatches = [] }: Props) {
+export function Header({ liveMatches = [], dark, onToggleDark }: Props) {
   return (
     <header className="bg-gradient-to-r from-[#1a3a6b] to-[#c8102e] text-white px-4 py-4">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-3xl">⚽</span>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-bold leading-tight">World Cup 2026 Pool Standings</h1>
             <p className="text-xs opacity-80 mt-0.5">Blaze-Heuga Pool · 20 entries · tap for full breakdown</p>
           </div>
+          <button
+            onClick={onToggleDark}
+            className="text-lg bg-white/15 hover:bg-white/25 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? '☀️' : '🌙'}
+          </button>
         </div>
 
         <div className="flex flex-wrap gap-2 mt-3">

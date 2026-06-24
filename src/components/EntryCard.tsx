@@ -14,7 +14,7 @@ function PickChip({
 }) {
   return (
     <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-sm text-gray-700">{label}</span>
+      <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
       <div className="flex items-center gap-1">
         {delta ? (
           <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full animate-pulse">
@@ -24,8 +24,8 @@ function PickChip({
         <span
           className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${
             points === 0 && !delta
-              ? 'bg-gray-100 text-gray-400'
-              : 'bg-blue-50 text-blue-700'
+              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+              : 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
           }`}
         >
           {delta ? points + delta : `+${points}`}
@@ -59,7 +59,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
 
   return (
     <div
-      className={`bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow ${borderClass}`}
+      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow ${borderClass}`}
     >
       <button
         className="w-full flex items-center gap-3 px-4 py-3 text-left"
@@ -72,7 +72,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
             <span className="text-gray-500 text-base">{rank}</span>
           )}
         </span>
-        <span className="flex-1 font-semibold text-gray-800 text-sm">
+        <span className="flex-1 font-semibold text-gray-800 dark:text-gray-100 text-sm">
           {entry.name}
         </span>
         {entry.note && (
@@ -99,7 +99,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 px-4 pb-4 pt-3">
+        <div className="border-t border-gray-100 dark:border-gray-700 px-4 pb-4 pt-3">
           {entry.note && (
             <div className="mb-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
               ℹ️ {entry.note}
@@ -107,7 +107,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
                 ⚽ Teams
               </h4>
               {entry.teams.map((p, i) => (
@@ -120,7 +120,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
               ))}
             </div>
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
                 🌟 Players
               </h4>
               {entry.players.map((p, i) => (
@@ -133,7 +133,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
               ))}
             </div>
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">
+              <h4 className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
                 🧤 Keepers
               </h4>
               {entry.keepers.map((p, i) => (
