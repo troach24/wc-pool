@@ -37,7 +37,7 @@ export function StandingsGrid({ entries, livePoints }: Props) {
         <thead>
           <tr>
             <th className="sticky left-0 z-20 bg-gray-800 text-white px-2 py-2 text-center w-10">#</th>
-            <th className="sticky left-10 z-20 bg-gray-800 text-white px-3 py-2 text-left min-w-[180px]">Team Name</th>
+            <th className="sticky left-10 z-20 bg-gray-800 text-white px-3 py-2 text-left min-w-[120px] sm:min-w-[180px]">Team Name</th>
             {['Team 1', 'Team 2', 'Team 3'].map((h, i) => (
               <th key={h} className={`${GROUP_COLORS[i]} text-white px-3 py-2 text-left uppercase tracking-wide min-w-[130px]`}>{h}</th>
             ))}
@@ -69,8 +69,8 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                   {rank <= 3 ? MEDALS[rank - 1] : rank}
                 </td>
                 {/* Name */}
-                <td className="sticky left-10 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 min-w-[180px]">
-                  {entry.name}
+                <td className="sticky left-10 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 min-w-[120px] sm:min-w-[180px] max-w-[120px] sm:max-w-none overflow-hidden">
+                  <span className="block truncate sm:overflow-visible sm:whitespace-normal">{entry.name}</span>
                 </td>
                 {/* Picks */}
                 {allPicks.map((pick, i) => {
