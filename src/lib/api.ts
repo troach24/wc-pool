@@ -18,12 +18,17 @@ async function get<T>(path: string): Promise<T> {
 
 // ---- Normalized shapes used across the app ----
 
-export type Incident = {
-  incidentType: 'goal' | 'card' | string;
-  incidentClass?: 'yellow' | 'red' | string;
-  player?: { name: string };
-  assist1?: { name: string };
-  isHome?: boolean;
+// One player's stat line within a single fixture.
+export type PlayerLine = {
+  name: string;
+  teamId: number;
+  position: string | null; // 'G' | 'D' | 'M' | 'F'
+  minutes: number | null;
+  goals: number;
+  assists: number;
+  yellow: number;
+  red: number;
+  saves: number;
 };
 
 export type WCEvent = {
@@ -63,13 +68,17 @@ type AFFixture = {
   league: { round: string };
 };
 
-type AFEvent = {
-  type: string;
-  detail: string;
-  player: { name: string | null };
-  assist: { name: string | null };
+type AFPlayersResp = Array<{
   team: { id: number };
-};
+  players: Array<{
+    player: { name: string };
+    statistics: Array<{
+      games: { position: string | null; minutes: number | null };
+      goals: { total: number | null; assists: number | null; saves: number | null };
+      cards: { yellow: number | null; red: number | null };
+    }>;
+  }>;
+}>;
 
 const LIVE_CODES = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'INT']);
 const DONE_CODES = new Set(['FT', 'AET', 'PEN']);
@@ -143,24 +152,24 @@ export async function fetchWCFixtures(
   return resp.map((f) => toWCEvent(f, groupByTeam));
 }
 
-export async function fetchFixtureEvents(fixtureId: number): Promise<Incident[]> {
-  const resp = await get<AFEvent[]>(`/fixtures/events?fixture=${fixtureId}`);
-  const out: Incident[] = [];
-  for (const e of resp) {
-    if (e.type === 'Goal') {
-      if (e.detail === 'Own Goal') continue; // doesn't credit the scorer
-      if (e.detail === 'Missed Penalty') continue;
+// Per-player stat lines for one fixture — goals, assists, cards AND keeper saves.
+export async function fetchFixturePlayers(fixtureId: number): Promise<PlayerLine[]> {
+  const resp = await get<AFPlayersResp>(`/fixtures/players?fixture=${fixtureId}`);
+  const out: PlayerLine[] = [];
+  for (const team of resp) {
+    for (const p of team.players) {
+      const s = p.statistics[0];
+      if (!s) continue;
       out.push({
-        incidentType: 'goal',
-        player: e.player.name ? { name: e.player.name } : undefined,
-        assist1: e.assist.name ? { name: e.assist.name } : undefined,
-      });
-    } else if (e.type === 'Card') {
-      const cls = e.detail === 'Red Card' ? 'red' : 'yellow';
-      out.push({
-        incidentType: 'card',
-        incidentClass: cls,
-        player: e.player.name ? { name: e.player.name } : undefined,
+        name: p.player.name,
+        teamId: team.team.id,
+        position: s.games?.position ?? null,
+        minutes: s.games?.minutes ?? null,
+        goals: s.goals?.total ?? 0,
+        assists: s.goals?.assists ?? 0,
+        yellow: s.cards?.yellow ?? 0,
+        red: s.cards?.red ?? 0,
+        saves: s.goals?.saves ?? 0,
       });
     }
   }

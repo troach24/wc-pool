@@ -6,29 +6,31 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 function PickChip({
   label,
   points,
-  delta,
+  liveValue,
 }: {
   label: string;
   points: number;
-  delta?: number;
+  liveValue?: number;
 }) {
+  const value = liveValue ?? points;
+  const movement = liveValue !== undefined ? liveValue - points : 0;
   return (
     <div className="flex items-center justify-between gap-2 py-1">
       <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
       <div className="flex items-center gap-1">
-        {delta ? (
-          <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full animate-pulse">
-            +{delta}▲
+        {movement > 0 ? (
+          <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
+            +{movement}▲
           </span>
         ) : null}
         <span
           className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${
-            points === 0 && !delta
+            value === 0
               ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
               : 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
           }`}
         >
-          {delta ? points + delta : `+${points}`}
+          +{value}
         </span>
       </div>
     </div>
@@ -39,14 +41,14 @@ type Props = {
   entry: Entry;
   rank: number;
   liveTotal?: number;
-  pickDeltas?: Map<string, number>;
+  pickValues?: Map<string, number>;
 };
 
-export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
+export function EntryCard({ entry, rank, liveTotal, pickValues }: Props) {
   const [open, setOpen] = useState(false);
 
   const displayTotal = liveTotal ?? entry.points;
-  const hasLiveDelta = liveTotal !== undefined && liveTotal !== entry.points;
+  const movement = liveTotal !== undefined ? liveTotal - entry.points : 0;
 
   const borderClass =
     rank === 1
@@ -81,9 +83,9 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
           </span>
         )}
         <div className="flex items-center gap-1.5">
-          {hasLiveDelta && (
+          {movement > 0 && (
             <span className="text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
-              +{liveTotal! - entry.points} live
+              +{movement} ▲
             </span>
           )}
           <span className="font-display text-2xl font-bold text-[#1a3a6b] dark:text-blue-300 tabular-nums">
@@ -115,7 +117,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
                   key={i}
                   label={p.label}
                   points={p.points}
-                  delta={pickDeltas?.get(p.label)}
+                  liveValue={pickValues?.get(p.label)}
                 />
               ))}
             </div>
@@ -128,7 +130,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
                   key={i}
                   label={p.label}
                   points={p.points}
-                  delta={pickDeltas?.get(p.label)}
+                  liveValue={pickValues?.get(p.label)}
                 />
               ))}
             </div>
@@ -141,7 +143,7 @@ export function EntryCard({ entry, rank, liveTotal, pickDeltas }: Props) {
                   key={i}
                   label={p.label}
                   points={p.points}
-                  delta={pickDeltas?.get(p.label)}
+                  liveValue={pickValues?.get(p.label)}
                 />
               ))}
             </div>

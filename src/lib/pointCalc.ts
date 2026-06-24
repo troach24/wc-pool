@@ -1,5 +1,5 @@
-import type { Incident, StandingRow, WCEvent } from './api';
-import { PLAYER_POINTS, TEAM_POINTS } from './scoring';
+import type { PlayerLine, StandingRow, WCEvent } from './api';
+import { PLAYER_POINTS, TEAM_POINTS, KEEPER_POINTS } from './scoring';
 import { matchesApiName, stripFlag } from './nameMap';
 
 export type PlayerStats = {
@@ -7,6 +7,12 @@ export type PlayerStats = {
   assists: number;
   yellowCards: number;
   redCards: number;
+};
+
+export type KeeperStats = {
+  saves: number;
+  shutouts: number;
+  wins: number;
 };
 
 export type TeamStats = {
@@ -17,63 +23,71 @@ export type TeamStats = {
 
 export type LiveStats = {
   players: Map<string, PlayerStats>; // API player name → stats
-  teams: Map<string, TeamStats>;     // API team name → stats
+  keepers: Map<string, KeeperStats>; // API keeper name → stats (only keepers who played)
+  teams: Map<string, TeamStats>; // API team name → stats
 };
 
-export function accumulateIncidents(
-  events: Array<{ event: WCEvent; incidents: Incident[] }>
+export function accumulateLines(
+  events: Array<{ event: WCEvent; lines: PlayerLine[] }>
 ): LiveStats {
   const players = new Map<string, PlayerStats>();
+  const keepers = new Map<string, KeeperStats>();
   const teams = new Map<string, TeamStats>();
 
-  function playerStats(name: string): PlayerStats {
+  const playerStats = (name: string) => {
     if (!players.has(name)) players.set(name, { goals: 0, assists: 0, yellowCards: 0, redCards: 0 });
     return players.get(name)!;
-  }
-
-  function teamStats(name: string): TeamStats {
+  };
+  const keeperStats = (name: string) => {
+    if (!keepers.has(name)) keepers.set(name, { saves: 0, shutouts: 0, wins: 0 });
+    return keepers.get(name)!;
+  };
+  const teamStats = (name: string) => {
     if (!teams.has(name)) teams.set(name, { goalsScored: 0, wins: 0, shutouts: 0 });
     return teams.get(name)!;
-  }
+  };
 
-  for (const { event, incidents } of events) {
-    const home = event.homeTeam.name;
-    const away = event.awayTeam.name;
+  for (const { event, lines } of events) {
     const homeGoals = event.homeScore?.current ?? 0;
     const awayGoals = event.awayScore?.current ?? 0;
     const finished = event.status.type === 'finished';
 
+    // Goals are locked in the moment they're scored — count them live.
+    teamStats(event.homeTeam.name).goalsScored += homeGoals;
+    teamStats(event.awayTeam.name).goalsScored += awayGoals;
+
+    // Wins & clean sheets aren't settled until full time.
     if (finished) {
-      // Team goals
-      teamStats(home).goalsScored += homeGoals;
-      teamStats(away).goalsScored += awayGoals;
-
-      // Wins
-      if (homeGoals > awayGoals) teamStats(home).wins += 1;
-      else if (awayGoals > homeGoals) teamStats(away).wins += 1;
-
-      // Shutouts
-      if (awayGoals === 0) teamStats(home).shutouts += 1;
-      if (homeGoals === 0) teamStats(away).shutouts += 1;
+      if (homeGoals > awayGoals) teamStats(event.homeTeam.name).wins += 1;
+      else if (awayGoals > homeGoals) teamStats(event.awayTeam.name).wins += 1;
+      if (awayGoals === 0) teamStats(event.homeTeam.name).shutouts += 1;
+      if (homeGoals === 0) teamStats(event.awayTeam.name).shutouts += 1;
     }
 
-    for (const inc of incidents) {
-      if (inc.incidentType === 'goal' && inc.incidentClass !== 'ownGoal') {
-        const name = inc.player?.name;
-        if (name) playerStats(name).goals += 1;
-        const assist = inc.assist1?.name;
-        if (assist) playerStats(assist).assists += 1;
-      }
-      if (inc.incidentType === 'card') {
-        const name = inc.player?.name;
-        if (!name) continue;
-        if (inc.incidentClass === 'yellow') playerStats(name).yellowCards += 1;
-        if (inc.incidentClass === 'red') playerStats(name).redCards += 1;
+    for (const line of lines) {
+      const ps = playerStats(line.name);
+      ps.goals += line.goals;
+      ps.assists += line.assists;
+      ps.yellowCards += line.yellow;
+      ps.redCards += line.red;
+
+      // Keeper scoring — only keepers who actually played.
+      if (line.position === 'G' && (line.minutes ?? 0) > 0) {
+        const ks = keeperStats(line.name);
+        ks.saves += line.saves; // saves lock in live
+
+        if (finished) {
+          const isHome = line.teamId === event.homeTeam.id;
+          const ownGoals = isHome ? homeGoals : awayGoals;
+          const oppGoals = isHome ? awayGoals : homeGoals;
+          if (oppGoals === 0) ks.shutouts += 1;
+          if (ownGoals > oppGoals) ks.wins += 1;
+        }
       }
     }
   }
 
-  return { players, teams };
+  return { players, keepers, teams };
 }
 
 export function computePlayerPoints(stats: PlayerStats): number {
@@ -85,6 +99,14 @@ export function computePlayerPoints(stats: PlayerStats): number {
   );
 }
 
+export function computeKeeperPoints(stats: KeeperStats): number {
+  return (
+    stats.wins * KEEPER_POINTS.win +
+    stats.shutouts * KEEPER_POINTS.shutout +
+    stats.saves * KEEPER_POINTS.save
+  );
+}
+
 export function computeTeamPointsFromStats(stats: TeamStats): number {
   return (
     stats.goalsScored * TEAM_POINTS.goal +
@@ -93,21 +115,18 @@ export function computeTeamPointsFromStats(stats: TeamStats): number {
   );
 }
 
-// Apply group position bonuses from standings
+// Apply group position bonuses from standings (only once all 3 group games played)
 export function applyGroupBonuses(
   teamPoints: Map<string, number>,
   standings: StandingRow[]
 ): Map<string, number> {
   const result = new Map(teamPoints);
 
-  // Group rows by group (each group has 4 teams)
-  // The standings endpoint returns all rows; we look for position 1 = win group
   for (const row of standings) {
     const name = row.team.name;
     const existing = result.get(name) ?? 0;
     let bonus = 0;
 
-    // Only award position bonus after all group games played (3 matches)
     if (row.matches >= 3) {
       if (row.position === 1) bonus = TEAM_POINTS.winGroup;
       else if (row.position === 2) bonus = TEAM_POINTS.secondGroup;
@@ -134,8 +153,9 @@ export function findMatchingApiName(
 
 export type PickImpact = { label: string; points: number };
 
-// Given a single match's stats and the full set of pool pick labels,
-// return which pool picks earned points in THIS match (for the live banner).
+// Which pool picks earned points in a single match (for the live banner).
+// Checks keepers first (so a keeper pick scores saves, not stray player points),
+// then outfield players, then teams.
 export function computeMatchImpacts(
   matchStats: LiveStats,
   matchTeamPoints: Map<string, number>,
@@ -146,6 +166,16 @@ export function computeMatchImpacts(
 
   for (const label of poolPickLabels) {
     if (seen.has(label)) continue;
+
+    const keeperMatch = findMatchingApiName(label, matchStats.keepers.keys());
+    if (keeperMatch) {
+      const pts = computeKeeperPoints(matchStats.keepers.get(keeperMatch)!);
+      if (pts > 0) {
+        impacts.push({ label, points: pts });
+        seen.add(label);
+        continue;
+      }
+    }
 
     const playerMatch = findMatchingApiName(label, matchStats.players.keys());
     if (playerMatch) {

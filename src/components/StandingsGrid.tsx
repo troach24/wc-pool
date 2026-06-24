@@ -74,16 +74,18 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                 </td>
                 {/* Picks */}
                 {allPicks.map((pick, i) => {
-                  const pickDelta = livePoints?.pickDeltas.get(pick.label) ?? 0;
+                  const liveValue = livePoints?.pickValues.get(pick.label);
+                  const value = liveValue ?? pick.points;
+                  const movement = liveValue !== undefined ? liveValue - pick.points : 0;
                   return (
                     <td key={i} className="px-3 py-2 border-l border-gray-100 dark:border-gray-700">
                       <div className="text-gray-700 dark:text-gray-300">{pick.label}</div>
                       <div className="flex items-center gap-1">
-                        <span className={`font-bold ${pick.points === 0 && !pickDelta ? 'text-gray-300 dark:text-gray-600' : 'text-blue-600 dark:text-blue-400'}`}>
-                          +{pick.points + pickDelta}
+                        <span className={`font-bold ${value === 0 ? 'text-gray-300 dark:text-gray-600' : 'text-blue-600 dark:text-blue-400'}`}>
+                          +{value}
                         </span>
-                        {pickDelta > 0 && (
-                          <span className="text-green-500 text-[10px] font-bold">▲{pickDelta}</span>
+                        {movement > 0 && (
+                          <span className="text-green-500 text-[10px] font-bold">▲{movement}</span>
                         )}
                       </div>
                     </td>

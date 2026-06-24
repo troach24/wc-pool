@@ -32,7 +32,7 @@ export function Leaderboard({ entries, livePoints }: Props) {
           entry={entry}
           rank={rank}
           liveTotal={livePoints?.updatedPoints.get(entry.name)}
-          pickDeltas={livePoints?.pickDeltas}
+          pickValues={livePoints?.pickValues}
         />
       ))}
     </div>
