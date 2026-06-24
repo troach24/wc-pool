@@ -11,23 +11,18 @@ const GROUP_COLORS = [
 
 type Props = {
   entries: Entry[];
-  livePoints?: LivePointsResult;
+  livePoints: LivePointsResult;
 };
 
 export function StandingsGrid({ entries, livePoints }: Props) {
-  const sorted = [...entries].sort((a, b) => {
-    const aTotal = livePoints?.updatedPoints.get(a.name) ?? a.points;
-    const bTotal = livePoints?.updatedPoints.get(b.name) ?? b.points;
-    return bTotal - aTotal;
-  });
+  const total = (name: string) => livePoints.updatedPoints.get(name) ?? 0;
+  const sorted = [...entries].sort((a, b) => total(b.name) - total(a.name));
 
   const ranked: { entry: Entry; rank: number }[] = [];
   for (let i = 0; i < sorted.length; i++) {
-    const aTotal = livePoints?.updatedPoints.get(sorted[i].name) ?? sorted[i].points;
-    const prevTotal = i > 0
-      ? (livePoints?.updatedPoints.get(sorted[i - 1].name) ?? sorted[i - 1].points)
-      : null;
-    const rank = i === 0 ? 1 : prevTotal === aTotal ? ranked[i - 1].rank : i + 1;
+    const cur = total(sorted[i].name);
+    const prev = i > 0 ? total(sorted[i - 1].name) : null;
+    const rank = i === 0 ? 1 : prev === cur ? ranked[i - 1].rank : i + 1;
     ranked.push({ entry: sorted[i], rank });
   }
 
@@ -52,8 +47,7 @@ export function StandingsGrid({ entries, livePoints }: Props) {
         </thead>
         <tbody>
           {ranked.map(({ entry, rank }) => {
-            const total = livePoints?.updatedPoints.get(entry.name) ?? entry.points;
-            const delta = livePoints ? total - entry.points : 0;
+            const entryTotal = total(entry.name);
             const allPicks = [...entry.teams, ...entry.players, ...entry.keepers];
             const borderClass = rank === 1 ? 'border-l-4 border-l-yellow-400' :
               rank === 2 ? 'border-l-4 border-l-gray-400' :
@@ -74,9 +68,8 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                 </td>
                 {/* Picks */}
                 {allPicks.map((pick, i) => {
-                  const liveValue = livePoints?.pickValues.get(pick.label);
-                  const value = liveValue ?? pick.points;
-                  const movement = liveValue !== undefined ? liveValue - pick.points : 0;
+                  const value = livePoints.pickValues.get(pick.label) ?? 0;
+                  const live = livePoints.livePickLabels.has(pick.label);
                   return (
                     <td key={i} className="px-3 py-2 border-l border-gray-100 dark:border-gray-700">
                       <div className="text-gray-700 dark:text-gray-300">{pick.label}</div>
@@ -84,8 +77,8 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                         <span className={`font-bold ${value === 0 ? 'text-gray-300 dark:text-gray-600' : 'text-blue-600 dark:text-blue-400'}`}>
                           +{value}
                         </span>
-                        {movement > 0 && (
-                          <span className="text-green-500 text-[10px] font-bold">▲{movement}</span>
+                        {live && (
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" title="scoring live" />
                         )}
                       </div>
                     </td>
@@ -93,10 +86,7 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                 })}
                 {/* Total */}
                 <td className="px-3 py-2 text-center font-black text-base text-[#1a3a6b] dark:text-blue-300 bg-yellow-50 dark:bg-yellow-900/10">
-                  {total}
-                  {delta > 0 && (
-                    <div className="text-[10px] font-bold text-green-500">+{delta}</div>
-                  )}
+                  {entryTotal}
                 </td>
               </tr>
             );

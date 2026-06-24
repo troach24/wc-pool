@@ -5,24 +5,20 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 function PickChip({
   label,
-  points,
-  liveValue,
+  value,
+  live,
 }: {
   label: string;
-  points: number;
-  liveValue?: number;
+  value: number;
+  live: boolean;
 }) {
-  const value = liveValue ?? points;
-  const movement = liveValue !== undefined ? liveValue - points : 0;
   return (
     <div className="flex items-center justify-between gap-2 py-1">
       <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
       <div className="flex items-center gap-1">
-        {movement > 0 ? (
-          <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
-            +{movement}▲
-          </span>
-        ) : null}
+        {live && (
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" title="scoring live" />
+        )}
         <span
           className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${
             value === 0
@@ -40,15 +36,18 @@ function PickChip({
 type Props = {
   entry: Entry;
   rank: number;
-  liveTotal?: number;
-  pickValues?: Map<string, number>;
+  total: number;
+  pickValues: Map<string, number>;
+  livePickLabels: Set<string>;
 };
 
-export function EntryCard({ entry, rank, liveTotal, pickValues }: Props) {
+export function EntryCard({ entry, rank, total, pickValues, livePickLabels }: Props) {
   const [open, setOpen] = useState(false);
 
-  const displayTotal = liveTotal ?? entry.points;
-  const movement = liveTotal !== undefined ? liveTotal - entry.points : 0;
+  const displayTotal = total;
+  const hasLivePick = [...entry.teams, ...entry.players, ...entry.keepers].some(
+    (p) => livePickLabels.has(p.label)
+  );
 
   const borderClass =
     rank === 1
@@ -83,9 +82,10 @@ export function EntryCard({ entry, rank, liveTotal, pickValues }: Props) {
           </span>
         )}
         <div className="flex items-center gap-1.5">
-          {movement > 0 && (
-            <span className="text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
-              +{movement} ▲
+          {hasLivePick && (
+            <span className="flex items-center gap-1 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+              live
             </span>
           )}
           <span className="font-display text-2xl font-bold text-[#1a3a6b] dark:text-blue-300 tabular-nums">
@@ -116,8 +116,8 @@ export function EntryCard({ entry, rank, liveTotal, pickValues }: Props) {
                 <PickChip
                   key={i}
                   label={p.label}
-                  points={p.points}
-                  liveValue={pickValues?.get(p.label)}
+                  value={pickValues.get(p.label) ?? 0}
+                  live={livePickLabels.has(p.label)}
                 />
               ))}
             </div>
@@ -129,8 +129,8 @@ export function EntryCard({ entry, rank, liveTotal, pickValues }: Props) {
                 <PickChip
                   key={i}
                   label={p.label}
-                  points={p.points}
-                  liveValue={pickValues?.get(p.label)}
+                  value={pickValues.get(p.label) ?? 0}
+                  live={livePickLabels.has(p.label)}
                 />
               ))}
             </div>
@@ -142,8 +142,8 @@ export function EntryCard({ entry, rank, liveTotal, pickValues }: Props) {
                 <PickChip
                   key={i}
                   label={p.label}
-                  points={p.points}
-                  liveValue={pickValues?.get(p.label)}
+                  value={pickValues.get(p.label) ?? 0}
+                  live={livePickLabels.has(p.label)}
                 />
               ))}
             </div>

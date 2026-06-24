@@ -4,23 +4,18 @@ import { EntryCard } from './EntryCard';
 
 type Props = {
   entries: Entry[];
-  livePoints?: LivePointsResult;
+  livePoints: LivePointsResult;
 };
 
 export function Leaderboard({ entries, livePoints }: Props) {
-  const sorted = [...entries].sort((a, b) => {
-    const aTotal = livePoints?.updatedPoints.get(a.name) ?? a.points;
-    const bTotal = livePoints?.updatedPoints.get(b.name) ?? b.points;
-    return bTotal - aTotal;
-  });
+  const total = (name: string) => livePoints.updatedPoints.get(name) ?? 0;
+  const sorted = [...entries].sort((a, b) => total(b.name) - total(a.name));
 
   const ranked: { entry: Entry; rank: number }[] = [];
   for (let i = 0; i < sorted.length; i++) {
-    const aTotal = livePoints?.updatedPoints.get(sorted[i].name) ?? sorted[i].points;
-    const prevTotal = i > 0
-      ? (livePoints?.updatedPoints.get(sorted[i - 1].name) ?? sorted[i - 1].points)
-      : null;
-    const rank = i === 0 ? 1 : prevTotal === aTotal ? ranked[i - 1].rank : i + 1;
+    const cur = total(sorted[i].name);
+    const prev = i > 0 ? total(sorted[i - 1].name) : null;
+    const rank = i === 0 ? 1 : prev === cur ? ranked[i - 1].rank : i + 1;
     ranked.push({ entry: sorted[i], rank });
   }
 
@@ -31,8 +26,9 @@ export function Leaderboard({ entries, livePoints }: Props) {
           key={entry.name}
           entry={entry}
           rank={rank}
-          liveTotal={livePoints?.updatedPoints.get(entry.name)}
-          pickValues={livePoints?.pickValues}
+          total={total(entry.name)}
+          pickValues={livePoints.pickValues}
+          livePickLabels={livePoints.livePickLabels}
         />
       ))}
     </div>

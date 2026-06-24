@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 const entries = (rawData as any[]).map(fromRaw);
 
 function PoolApp() {
-  const { data: livePoints, isFetching } = useLivePoints(entries);
+  const { data: livePoints, isFetching, isError } = useLivePoints(entries);
   const { dark, toggle } = useDarkMode();
   const [view, setView] = useState<'cards' | 'grid'>(
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
@@ -65,14 +65,23 @@ function PoolApp() {
           )}
         </div>
 
-        {view === 'cards'
-          ? <Leaderboard entries={entries} livePoints={livePoints} />
-          : <StandingsGrid entries={entries} livePoints={livePoints} />
-        }
+        {livePoints ? (
+          view === 'cards'
+            ? <Leaderboard entries={entries} livePoints={livePoints} />
+            : <StandingsGrid entries={entries} livePoints={livePoints} />
+        ) : isError ? (
+          <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-6 text-center text-sm text-red-700 dark:text-red-300">
+            Couldn't reach the live stats feed. Retrying…
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3 py-16 text-gray-400 dark:text-gray-500">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-[#1a3a6b] dark:border-gray-600 dark:border-t-blue-400" />
+            <span className="text-sm">Loading live standings…</span>
+          </div>
+        )}
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4 pb-6">
-          Keeper save counts from organizer sheet · not independently published ·
-          player/team points from live incident data
+          All points computed live from API-Football · goals, assists, cards & keeper saves
         </p>
       </main>
     </div>

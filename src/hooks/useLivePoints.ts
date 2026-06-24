@@ -53,8 +53,9 @@ export type MatchImpact = {
 };
 
 export type LivePointsResult = {
-  updatedPoints: Map<string, number>; // entry name → live total
+  updatedPoints: Map<string, number>; // entry name → live total (100% from API)
   pickValues: Map<string, number>; // pick label → live value (API source of truth)
+  livePickLabels: Set<string>; // pick labels currently scoring in an in-progress match
   lastUpdated: Date;
   liveMatches: WCEvent[];
   matchImpacts: MatchImpact[];
@@ -126,20 +127,30 @@ export function useLivePoints(entries: Entry[]) {
           dayKey(m.event.startTimestamp) === latestDay
       );
 
-      // Entry total = sum of live pick values, falling back to seed per pick.
+      // Entry total = sum of live pick values ONLY. No seed fallback: a pick
+      // that doesn't match the feed scores 0 (it has no live stats yet).
       const updatedPoints = new Map<string, number>();
       for (const entry of entries) {
         const allPicks = [...entry.teams, ...entry.players, ...entry.keepers];
         const total = allPicks.reduce(
-          (sum, pick) => sum + (pickValues.get(pick.label) ?? pick.points),
+          (sum, pick) => sum + (pickValues.get(pick.label) ?? 0),
           0
         );
         updatedPoints.set(entry.name, total);
       }
 
+      // Labels actively scoring in a currently in-progress match (for live UI cues)
+      const livePickLabels = new Set<string>();
+      for (const mi of matchImpacts) {
+        if (mi.event.status.type === 'inprogress') {
+          for (const imp of mi.impacts) livePickLabels.add(imp.label);
+        }
+      }
+
       return {
         updatedPoints,
         pickValues,
+        livePickLabels,
         lastUpdated: new Date(),
         liveMatches: fixtures.filter((m) => m.status.type === 'inprogress'),
         matchImpacts,
