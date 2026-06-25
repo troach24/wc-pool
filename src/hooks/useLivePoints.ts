@@ -13,6 +13,7 @@ export type LivePointsResult = {
   pickValues: Map<string, number>;
   livePickLabels: Set<string>;
   liveMatchCount: number;
+  todayMatchCount: number;
   matchImpacts: MatchImpact[];
   lastUpdated: Date;
   recentGoal?: { team: string; at: number };
@@ -33,6 +34,7 @@ export function useLivePoints() {
         pickValues: new Map(p.pickValues),
         livePickLabels: new Set(p.livePickLabels),
         liveMatchCount: p.liveMatchCount,
+        todayMatchCount: p.todayMatchCount,
         matchImpacts: p.matchImpacts,
         lastUpdated: new Date(p.lastUpdated),
         recentGoal: p.recentGoal,

@@ -55,7 +55,7 @@ function PoolApp() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {goal && <GoalAnimation key={goal.key} kit={goal.kit} onDone={() => setGoal(null)} />}
-      <Header dark={dark} onToggleDark={toggle} />
+      <Header dark={dark} onToggleDark={toggle} todayMatchCount={livePoints?.todayMatchCount} />
       <main className={`mx-auto px-4 py-4 ${view === 'grid' ? 'max-w-7xl' : 'max-w-3xl'}`}>
         {livePoints && (
           <LiveBanner matchImpacts={livePoints.matchImpacts} isFetching={isFetching} />

@@ -1,9 +1,10 @@
 type Props = {
   dark: boolean;
   onToggleDark: () => void;
+  todayMatchCount?: number;
 };
 
-export function Header({ dark, onToggleDark }: Props) {
+export function Header({ dark, onToggleDark, todayMatchCount }: Props) {
   return (
     <header className="relative overflow-hidden bg-[#0a1628] px-4 py-5">
       {/* Decorative pitch rings */}
@@ -28,7 +29,12 @@ export function Header({ dark, onToggleDark }: Props) {
               <span className="text-[#f0a500]">Standings</span>
             </h1>
             <p className="mt-1 text-xs text-white/55">
-              20 entries · Final July 19, 2026
+              20 entries ·{' '}
+              {todayMatchCount != null
+                ? todayMatchCount === 0
+                  ? 'No matches today'
+                  : `${todayMatchCount} match${todayMatchCount > 1 ? 'es' : ''} today`
+                : 'Final July 19, 2026'}
             </p>
           </div>
 
