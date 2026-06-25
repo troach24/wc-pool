@@ -26,25 +26,21 @@ function PoolApp() {
   );
   const [page, setPage] = useState<'standings' | 'schedule'>('standings');
 
-  // Celebrate the most recent goal (flagged server-side, kept ~10 min), but
-  // show it to each user at most once per 10 minutes — so freshly-loaded and
-  // returning users still catch it without spamming active watchers.
+  // Fire the goal animation whenever the server's goalSeq counter increases.
+  // Each increment = one new goal detected. The client stores the last seq it
+  // celebrated so every goal triggers every user exactly once.
   const [goal, setGoal] = useState<{ key: number; kit: TeamKit } | null>(null);
   useEffect(() => {
-    const recent = livePoints?.recentGoal;
-    if (!recent) return;
-    const COOLDOWN = 10 * 60 * 1000;
-    let last = 0;
-    try {
-      last = Number(localStorage.getItem('wc:lastCellyAt')) || 0;
-    } catch {
-      /* private mode — fall back to session only */
+    if (!livePoints) return;
+    const seq = livePoints.goalSeq;
+    if (seq === 0) return;
+    let lastSeq = 0;
+    try { lastSeq = Number(localStorage.getItem('wc:lastGoalSeq')) || 0; } catch { /* ignore */ }
+    if (seq <= lastSeq) return;
+    try { localStorage.setItem('wc:lastGoalSeq', String(seq)); } catch { /* ignore */ }
+    if (livePoints.goalTeam) {
+      setGoal({ key: Date.now(), kit: teamKit(livePoints.goalTeam) });
     }
-    if (Date.now() - last < COOLDOWN) return;
-    try {
-      localStorage.setItem('wc:lastCellyAt', String(Date.now()));
-    } catch { /* ignore */ }
-    setGoal({ key: Date.now(), kit: teamKit(recent.team) });
   }, [livePoints]);
 
   // Dev-only: run `__goal('Brazil')` in the console to preview a team's kit.

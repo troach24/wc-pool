@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { WCEvent } from '../lib/api';
 import type { PickImpact } from '../lib/pointCalc';
-import type { WCEvent } from '../lib/api';
 import type { StandingsPayload } from '../lib/computeStandings';
 
 export type MatchImpact = {
@@ -18,7 +17,8 @@ export type LivePointsResult = {
   todayFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
   lastUpdated: Date;
-  recentGoal?: { team: string; at: number };
+  goalSeq: number;
+  goalTeam?: string;
 };
 
 // The client makes ONE request to our own cached endpoint — no direct calls to
@@ -40,7 +40,8 @@ export function useLivePoints() {
         todayFixtures: p.todayFixtures,
         matchImpacts: p.matchImpacts,
         lastUpdated: new Date(p.lastUpdated),
-        recentGoal: p.recentGoal,
+        goalSeq: p.goalSeq,
+        goalTeam: p.goalTeam,
       };
     },
     staleTime: 30_000,

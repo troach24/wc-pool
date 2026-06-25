@@ -472,9 +472,9 @@ async function linesFor(event) {
   if (event.status.type === "finished") finishedLineCache.set(event.id, lines);
   return lines;
 }
-var GOAL_WINDOW_MS = 10 * 60 * 1e3;
 var prevScores = null;
-var recentGoal = null;
+var goalSeq = 0;
+var goalTeam;
 var PICK_MATCH_EXCLUSIONS = {
   "\u{1F1FA}\u{1F1F8}Freese": [1489370]
 };
@@ -502,8 +502,13 @@ async function computeStandings(entries2) {
       const before = prevScores.get(e.id);
       const now = curScores.get(e.id);
       if (!before) continue;
-      if (now.h > before.h) recentGoal = { team: e.homeTeam.name, at: Date.now() };
-      else if (now.a > before.a) recentGoal = { team: e.awayTeam.name, at: Date.now() };
+      if (now.h > before.h) {
+        goalSeq++;
+        goalTeam = e.homeTeam.name;
+      } else if (now.a > before.a) {
+        goalSeq++;
+        goalTeam = e.awayTeam.name;
+      }
     }
   }
   prevScores = curScores;
@@ -576,7 +581,6 @@ async function computeStandings(entries2) {
       for (const imp of mi.impacts) livePickLabels.add(imp.label);
     }
   }
-  const freshGoal = recentGoal && Date.now() - recentGoal.at < GOAL_WINDOW_MS ? recentGoal : void 0;
   return {
     updatedPoints: [...updatedPoints],
     pickValues: [...pickValues],
@@ -592,7 +596,8 @@ async function computeStandings(entries2) {
     })(),
     matchImpacts,
     lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
-    recentGoal: freshGoal
+    goalSeq,
+    goalTeam
   };
 }
 

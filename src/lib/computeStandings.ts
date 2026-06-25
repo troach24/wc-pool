@@ -62,16 +62,17 @@ export type StandingsPayload = {
   todayFixtures: import('./api').WCEvent[];
   matchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
   lastUpdated: string;
-  // The scoring team of the most recent goal, kept for ~10 min so freshly
-  // loaded clients can still celebrate it. Detected from score deltas between
-  // server recomputes — no extra API calls.
-  recentGoal?: { team: string; at: number };
+  // Monotonically increasing counter — increments once per detected goal.
+  // Clients store the last value they celebrated and fire the animation on
+  // any increase, so every goal triggers every user regardless of timing.
+  goalSeq: number;
+  goalTeam?: string;
 };
 
 // Module-scoped across warm serverless invocations.
-const GOAL_WINDOW_MS = 10 * 60 * 1000;
 let prevScores: Map<number, { h: number; a: number }> | null = null;
-let recentGoal: { team: string; at: number } | null = null;
+let goalSeq = 0;
+let goalTeam: string | undefined;
 
 // One-off commissioner exceptions: pick label → fixture IDs that must NOT count
 // toward that pick. The commissioner approved a mid-tournament player swap, so
@@ -121,8 +122,8 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
       const before = prevScores.get(e.id);
       const now = curScores.get(e.id)!;
       if (!before) continue;
-      if (now.h > before.h) recentGoal = { team: e.homeTeam.name, at: Date.now() };
-      else if (now.a > before.a) recentGoal = { team: e.awayTeam.name, at: Date.now() };
+      if (now.h > before.h) { goalSeq++; goalTeam = e.homeTeam.name; }
+      else if (now.a > before.a) { goalSeq++; goalTeam = e.awayTeam.name; }
     }
   }
   prevScores = curScores;
@@ -212,9 +213,6 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     }
   }
 
-  const freshGoal =
-    recentGoal && Date.now() - recentGoal.at < GOAL_WINDOW_MS ? recentGoal : undefined;
-
   return {
     updatedPoints: [...updatedPoints],
     pickValues: [...pickValues],
@@ -232,6 +230,7 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     })(),
     matchImpacts,
     lastUpdated: new Date().toISOString(),
-    recentGoal: freshGoal,
+    goalSeq,
+    goalTeam,
   };
 }
