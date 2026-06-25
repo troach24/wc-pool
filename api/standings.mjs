@@ -590,14 +590,7 @@ async function computeStandings(entries2) {
       const today = (/* @__PURE__ */ new Date()).toDateString();
       return fixtures.filter((m) => new Date(m.startTimestamp * 1e3).toDateString() === today).length;
     })(),
-    recentFixtures: (() => {
-      const now = Date.now();
-      const twoDaysMs = 2 * 24 * 60 * 60 * 1e3;
-      return fixtures.filter((m) => {
-        const ms = m.startTimestamp * 1e3;
-        return ms >= now - twoDaysMs && ms <= now + twoDaysMs;
-      }).sort((a, b) => a.startTimestamp - b.startTimestamp);
-    })(),
+    allFixtures: [...fixtures].sort((a, b) => a.startTimestamp - b.startTimestamp),
     matchImpacts,
     lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
     goalSeq,

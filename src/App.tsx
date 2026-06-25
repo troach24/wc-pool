@@ -59,7 +59,7 @@ function PoolApp() {
       <Header dark={dark} onToggleDark={toggle} todayMatchCount={livePoints?.todayMatchCount} />
       {page === 'schedule' && livePoints ? (
         <SchedulePage
-          recentFixtures={livePoints.recentFixtures}
+          allFixtures={livePoints.allFixtures}
           matchImpacts={livePoints.matchImpacts}
         />
       ) : (
