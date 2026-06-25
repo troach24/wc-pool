@@ -11,6 +11,7 @@ import { SchedulePage } from './components/SchedulePage';
 import { ChatPage } from './components/ChatPage';
 import { BottomNav } from './components/BottomNav';
 import { useLivePoints } from './hooks/useLivePoints';
+import { supabase } from './lib/supabase';
 import { useDarkMode } from './hooks/useDarkMode';
 import { fromRaw } from './lib/adapters';
 import { teamKit, type TeamKit } from './lib/teamKits';
@@ -26,6 +27,7 @@ function PoolApp() {
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
   );
   const [page, setPage] = useState<'standings' | 'schedule' | 'chat'>('standings');
+  const [unreadChat, setUnreadChat] = useState(false);
 
   // Fire the goal animation whenever the server's goalSeq counter increases.
   // Each increment = one new goal detected. The client stores the last seq it
@@ -53,6 +55,17 @@ function PoolApp() {
   }, []);
 
   const hasLive = (livePoints?.liveMatchCount ?? 0) > 0;
+
+  // Show unread dot when a new message arrives and chat tab isn't open
+  useEffect(() => {
+    const channel = supabase
+      .channel('unread')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        setUnreadChat((prev) => page !== 'chat' || prev);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [page]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 dark:bg-gray-900">
@@ -137,7 +150,15 @@ function PoolApp() {
         </p>
       </main>
       )}
-      <BottomNav page={page} onNavigate={setPage} hasLive={hasLive} />
+      <BottomNav
+        page={page}
+        onNavigate={(p) => {
+          if (p === 'chat') setUnreadChat(false);
+          setPage(p);
+        }}
+        hasLive={hasLive}
+        unreadChat={unreadChat}
+      />
     </div>
   );
 }

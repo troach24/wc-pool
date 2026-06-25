@@ -4,9 +4,10 @@ type Props = {
   page: Page;
   onNavigate: (p: Page) => void;
   hasLive: boolean;
+  unreadChat: boolean;
 };
 
-export function BottomNav({ page, onNavigate, hasLive }: Props) {
+export function BottomNav({ page, onNavigate, hasLive, unreadChat }: Props) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
       <div className="mx-auto flex max-w-3xl">
@@ -37,12 +38,15 @@ export function BottomNav({ page, onNavigate, hasLive }: Props) {
         </button>
         <button
           onClick={() => onNavigate('chat')}
-          className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+          className={`relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             page === 'chat'
               ? 'text-[#1a3a6b] dark:text-blue-400'
               : 'text-gray-400 dark:text-gray-500'
           }`}
         >
+          {unreadChat && (
+            <span className="absolute top-2 right-[calc(50%-16px)] h-2 w-2 rounded-full bg-red-500" />
+          )}
           <span className="text-lg leading-none">💬</span>
           Chat
         </button>
