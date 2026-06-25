@@ -7,13 +7,8 @@ type Props = {
 
 function statusLabel(desc: string, type: string): string {
   if (type === 'finished') return 'FT';
-  if (type === 'inprogress') {
-    if (/halftime|half-time|\bHT\b/i.test(desc)) return 'HT';
-    if (/1st/i.test(desc)) return '1st';
-    if (/2nd/i.test(desc)) return '2nd';
-    if (/extra/i.test(desc)) return 'ET';
-    return 'LIVE';
-  }
+  // For in-progress matches the server already provides the live minute
+  // (e.g. "67'") or "HT" in desc — show it directly instead of generic "LIVE".
   return desc;
 }
 

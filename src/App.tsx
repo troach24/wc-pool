@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { VerifiedBanner } from './components/VerifiedBanner';
 import { LiveBanner } from './components/LiveBanner';
 import { Leaderboard } from './components/Leaderboard';
 import { StandingsGrid } from './components/StandingsGrid';
+import { GoalAnimation } from './components/GoalAnimation';
 import { useLivePoints } from './hooks/useLivePoints';
 import { useDarkMode } from './hooks/useDarkMode';
 import { fromRaw } from './lib/adapters';
+import { teamKit, type TeamKit } from './lib/teamKits';
 import rawData from './data/standings.json';
 
 const queryClient = new QueryClient();
@@ -20,8 +22,40 @@ function PoolApp() {
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
   );
 
+  // Fire the goal animation when any live match's score ticks up between polls,
+  // wearing the scoring team's kit.
+  const prevScores = useRef<Map<number, { h: number; a: number }> | null>(null);
+  const [goal, setGoal] = useState<{ key: number; kit: TeamKit } | null>(null);
+  useEffect(() => {
+    if (!livePoints) return;
+    const cur = new Map<number, { h: number; a: number }>();
+    for (const mi of livePoints.matchImpacts) {
+      cur.set(mi.event.id, { h: mi.event.homeScore.current, a: mi.event.awayScore.current });
+    }
+    const prev = prevScores.current;
+    if (prev) {
+      for (const mi of livePoints.matchImpacts) {
+        const before = prev.get(mi.event.id);
+        const now = cur.get(mi.event.id)!;
+        if (!before) continue;
+        if (now.h > before.h) { setGoal({ key: Date.now(), kit: teamKit(mi.event.homeTeam.name) }); break; }
+        if (now.a > before.a) { setGoal({ key: Date.now(), kit: teamKit(mi.event.awayTeam.name) }); break; }
+      }
+    }
+    prevScores.current = cur;
+  }, [livePoints]);
+
+  // Dev-only: run `__goal('Brazil')` in the console to preview a team's kit.
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as any).__goal = (team = 'USA') =>
+        setGoal({ key: Date.now(), kit: teamKit(team) });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {goal && <GoalAnimation key={goal.key} kit={goal.kit} onDone={() => setGoal(null)} />}
       <Header dark={dark} onToggleDark={toggle} />
       <main className={`mx-auto px-4 py-4 ${view === 'grid' ? 'max-w-7xl' : 'max-w-3xl'}`}>
         {livePoints && (

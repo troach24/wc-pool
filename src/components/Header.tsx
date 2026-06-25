@@ -21,10 +21,10 @@ export function Header({ dark, onToggleDark }: Props) {
         <div className="flex items-start justify-between">
           <div>
             <div className="font-display text-[10px] uppercase tracking-[0.28em] text-white/45">
-              Heuge Balze · World Cup 2026 Pool
+              World Cup 2026 Pool
             </div>
             <h1 className="font-display text-3xl font-bold uppercase leading-[0.95] tracking-wide text-white sm:text-4xl">
-              World Cup{' '}
+              Heuge Balze{' '}
               <span className="text-[#f0a500]">Standings</span>
             </h1>
             <p className="mt-1 text-xs text-white/55">
