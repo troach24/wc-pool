@@ -45,7 +45,16 @@ export function useLivePoints() {
     },
     staleTime: 30_000,
     refetchIntervalInBackground: false,
-    refetchInterval: (query) =>
-      (query.state.data?.liveMatchCount ?? 0) > 0 ? 45_000 : 300_000,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return 300_000;
+      if (data.liveMatchCount > 0) return 45_000;
+      // Poll every 60s if a game kicks off within the next 10 minutes.
+      const soon = data.todayFixtures.some((f) => {
+        const msUntil = f.startTimestamp * 1000 - Date.now();
+        return msUntil > 0 && msUntil < 10 * 60 * 1000;
+      });
+      return soon ? 60_000 : 300_000;
+    },
   });
 }
