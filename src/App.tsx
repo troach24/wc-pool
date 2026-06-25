@@ -5,6 +5,7 @@ import { VerifiedBanner } from './components/VerifiedBanner';
 import { LiveBanner } from './components/LiveBanner';
 import { Leaderboard } from './components/Leaderboard';
 import { StandingsGrid } from './components/StandingsGrid';
+import { RulesPopover } from './components/RulesPopover';
 import { GoalAnimation } from './components/GoalAnimation';
 import { useLivePoints } from './hooks/useLivePoints';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -99,6 +100,9 @@ function PoolApp() {
               Grid view best on wider screens
             </span>
           )}
+          <div className="ml-auto">
+            <RulesPopover />
+          </div>
         </div>
 
         {livePoints ? (
