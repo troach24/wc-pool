@@ -592,6 +592,7 @@ async function computeStandings(entries2) {
     })(),
     allFixtures: [...fixtures].sort((a, b) => a.startTimestamp - b.startTimestamp),
     matchImpacts,
+    allMatchImpacts: allImpacts,
     lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
     goalSeq,
     goalTeam

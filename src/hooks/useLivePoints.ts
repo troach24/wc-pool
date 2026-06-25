@@ -16,6 +16,7 @@ export type LivePointsResult = {
   todayMatchCount: number;
   allFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
+  allMatchImpacts: MatchImpact[];
   lastUpdated: Date;
   goalSeq: number;
   goalTeam?: string;
@@ -39,6 +40,7 @@ export function useLivePoints() {
         todayMatchCount: p.todayMatchCount,
         allFixtures: p.allFixtures,
         matchImpacts: p.matchImpacts,
+        allMatchImpacts: p.allMatchImpacts,
         lastUpdated: new Date(p.lastUpdated),
         goalSeq: p.goalSeq,
         goalTeam: p.goalTeam,

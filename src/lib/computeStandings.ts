@@ -62,6 +62,7 @@ export type StandingsPayload = {
   // All tournament fixtures sorted by kickoff — client drives the date strip.
   allFixtures: import('./api').WCEvent[];
   matchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
+  allMatchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
   lastUpdated: string;
   // Monotonically increasing counter — increments once per detected goal.
   // Clients store the last value they celebrated and fire the animation on
@@ -225,6 +226,7 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     })(),
     allFixtures: [...fixtures].sort((a, b) => a.startTimestamp - b.startTimestamp),
     matchImpacts,
+    allMatchImpacts: allImpacts,
     lastUpdated: new Date().toISOString(),
     goalSeq,
     goalTeam,
