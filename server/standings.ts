@@ -17,10 +17,15 @@ export default async function handler(_req: any, res: any) {
     const payload = await computeStandings(entries);
 
     // Share one computation across all visitors via the edge cache.
-    // Refresh fast while matches are live, slow when idle.
+    // Refresh fast while matches are live, slow when idle,
+    // and medium when a kickoff is within the next 15 minutes.
     const live = payload.liveMatchCount > 0;
-    const sMaxAge = live ? 30 : 600;
-    const swr = live ? 60 : 1200;
+    const imminent = !live && payload.todayFixtures.some((f) => {
+      const msUntil = f.startTimestamp * 1000 - Date.now();
+      return msUntil > 0 && msUntil < 15 * 60 * 1000;
+    });
+    const sMaxAge = live ? 30 : imminent ? 60 : 600;
+    const swr = live ? 60 : imminent ? 120 : 1200;
 
     res.setHeader('Cache-Control', `public, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
     res.status(200).json(payload);

@@ -582,6 +582,14 @@ async function computeStandings(entries2) {
     pickValues: [...pickValues],
     livePickLabels: [...livePickLabels],
     liveMatchCount: fixtures.filter((m) => m.status.type === "inprogress").length,
+    todayMatchCount: (() => {
+      const today = (/* @__PURE__ */ new Date()).toDateString();
+      return fixtures.filter((m) => new Date(m.startTimestamp * 1e3).toDateString() === today).length;
+    })(),
+    todayFixtures: (() => {
+      const today = (/* @__PURE__ */ new Date()).toDateString();
+      return fixtures.filter((m) => new Date(m.startTimestamp * 1e3).toDateString() === today).sort((a, b) => a.startTimestamp - b.startTimestamp);
+    })(),
     matchImpacts,
     lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
     recentGoal: freshGoal
@@ -1539,8 +1547,12 @@ async function handler(_req, res) {
   try {
     const payload = await computeStandings(entries);
     const live = payload.liveMatchCount > 0;
-    const sMaxAge = live ? 30 : 600;
-    const swr = live ? 60 : 1200;
+    const imminent = !live && payload.todayFixtures.some((f) => {
+      const msUntil = f.startTimestamp * 1e3 - Date.now();
+      return msUntil > 0 && msUntil < 15 * 60 * 1e3;
+    });
+    const sMaxAge = live ? 30 : imminent ? 60 : 600;
+    const swr = live ? 60 : imminent ? 120 : 1200;
     res.setHeader("Cache-Control", `public, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
     res.status(200).json(payload);
   } catch (err) {
