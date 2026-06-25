@@ -14,19 +14,11 @@ function statusLabel(desc: string, type: string): string {
 }
 
 export function LiveBanner({ matchImpacts, isFetching, lastUpdated }: Props) {
-  if (!matchImpacts.length) return null;
+  const sorted = matchImpacts.filter((m) => m.event.status.type === 'inprogress');
 
-  // Live matches first, then most recent kickoffs — capped at 4
-  const sorted = [...matchImpacts]
-    .sort((a, b) => {
-      const rank = (m: MatchImpact) => (m.event.status.type === 'inprogress' ? 0 : 1);
-      const byStatus = rank(a) - rank(b);
-      if (byStatus !== 0) return byStatus;
-      return b.event.startTimestamp - a.event.startTimestamp;
-    })
-    .slice(0, 4);
+  if (!sorted.length) return null;
 
-  const anyLive = sorted.some((m) => m.event.status.type === 'inprogress');
+  const anyLive = true;
 
   return (
     <div className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-[#0d1b2a]">
