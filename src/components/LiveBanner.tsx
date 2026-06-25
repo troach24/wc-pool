@@ -42,9 +42,10 @@ export function LiveBanner({ matchImpacts, isFetching }: Props) {
             Latest results
           </span>
         )}
-        {isFetching && (
-          <span className="ml-auto text-[10px] text-white/30">syncing…</span>
-        )}
+        <span className="ml-auto flex items-center gap-1 text-[10px] text-white/25">
+          {isFetching && <span className="mr-1 text-white/30">syncing…</span>}
+          API-Football · FIFA verified
+        </span>
       </div>
 
       <div className="flex flex-col">
