@@ -26,8 +26,7 @@ export function VerifiedBanner({ lastUpdated, isFetching, liveCount }: Props) {
             <path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49" />
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14" />
           </svg>
-          API-Football
-          <span className="font-normal text-gray-400 dark:text-gray-500">· FIFA verified</span>
+          FIFA verified
         </span>
 
         <span className="flex shrink-0 items-center gap-1.5">

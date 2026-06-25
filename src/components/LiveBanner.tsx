@@ -52,7 +52,7 @@ export function LiveBanner({ matchImpacts, isFetching, lastUpdated }: Props) {
               {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           ) : null}
-          <span>· API-Football</span>
+          <span>· FIFA verified</span>
         </span>
       </div>
 
