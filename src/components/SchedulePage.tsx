@@ -3,7 +3,7 @@ import type { WCEvent } from '../lib/api';
 import type { MatchImpact } from '../hooks/useLivePoints';
 
 type Props = {
-  todayFixtures: WCEvent[];
+  recentFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
 };
 
@@ -75,7 +75,11 @@ function FixtureRow({ event, impacts }: { event: WCEvent; impacts: MatchImpact |
   );
 }
 
-export function SchedulePage({ todayFixtures, matchImpacts }: Props) {
+export function SchedulePage({ recentFixtures, matchImpacts }: Props) {
+  const localToday = new Date().toLocaleDateString();
+  const todayFixtures = recentFixtures.filter(
+    (f) => new Date(f.startTimestamp * 1000).toLocaleDateString() === localToday
+  );
   const liveFixtures = todayFixtures.filter((f) => f.status.type === 'inprogress');
   const hasLive = liveFixtures.length > 0;
   const [tab, setTab] = useState<'today' | 'live'>(() => (hasLive ? 'live' : 'today'));

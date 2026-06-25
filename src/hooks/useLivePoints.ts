@@ -14,7 +14,7 @@ export type LivePointsResult = {
   livePickLabels: Set<string>;
   liveMatchCount: number;
   todayMatchCount: number;
-  todayFixtures: WCEvent[];
+  recentFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
   lastUpdated: Date;
   goalSeq: number;
@@ -37,7 +37,7 @@ export function useLivePoints() {
         livePickLabels: new Set(p.livePickLabels),
         liveMatchCount: p.liveMatchCount,
         todayMatchCount: p.todayMatchCount,
-        todayFixtures: p.todayFixtures,
+        recentFixtures: p.recentFixtures,
         matchImpacts: p.matchImpacts,
         lastUpdated: new Date(p.lastUpdated),
         goalSeq: p.goalSeq,
@@ -51,7 +51,7 @@ export function useLivePoints() {
       if (!data) return 300_000;
       if (data.liveMatchCount > 0) return 45_000;
       // Poll every 60s if a game kicks off within the next 10 minutes.
-      const soon = data.todayFixtures.some((f) => {
+      const soon = data.recentFixtures.some((f) => {
         const msUntil = f.startTimestamp * 1000 - Date.now();
         return msUntil > 0 && msUntil < 10 * 60 * 1000;
       });
