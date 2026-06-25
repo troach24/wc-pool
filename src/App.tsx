@@ -71,11 +71,13 @@ function PoolApp() {
         {livePoints && (
           <LiveBanner matchImpacts={livePoints.matchImpacts} isFetching={isFetching} />
         )}
-        <VerifiedBanner
-          lastUpdated={livePoints?.lastUpdated}
-          isFetching={isFetching}
-          liveCount={livePoints?.liveMatchCount ?? 0}
-        />
+        {!hasLive && (
+          <VerifiedBanner
+            lastUpdated={livePoints?.lastUpdated}
+            isFetching={isFetching}
+            liveCount={0}
+          />
+        )}
 
         {/* View toggle */}
         <div className="flex items-center gap-3 mb-3">
