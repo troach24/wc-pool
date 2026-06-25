@@ -18,9 +18,45 @@ export type KeeperStats = {
 
 export type TeamStats = {
   goalsScored: number;
-  wins: number;
+  // Win/placement points earned from match *results*, round-aware: a group win
+  // is worth groupWin, a knockout win the per-round bonus, and the final/3rd-place
+  // matches pay out the tournament-placement bonuses (winner/runner-up/third).
+  resultPoints: number;
   shutouts: number;
 };
+
+// Points a match result is worth to the winner (and, for the final, to the
+// loser as runner-up) based on the API's round label. Goal and shutout points
+// accrue separately, every round; this covers only the win/placement bonus.
+export function roundResultPoints(round: string): { win: number; runnerUp: number } {
+  const r = round.toLowerCase();
+  if (r.includes('group')) return { win: TEAM_POINTS.groupWin, runnerUp: 0 };
+  if (r.includes('round of 32')) return { win: TEAM_POINTS.r32Win, runnerUp: 0 };
+  if (r.includes('round of 16')) return { win: TEAM_POINTS.r16Win, runnerUp: 0 };
+  if (r.includes('quarter')) return { win: TEAM_POINTS.qfWin, runnerUp: 0 };
+  if (r.includes('semi')) return { win: TEAM_POINTS.sfWin, runnerUp: 0 };
+  // "3rd Place Final" must be matched before the bare "final" check below.
+  if (r.includes('3rd place') || r.includes('third place'))
+    return { win: TEAM_POINTS.thirdPlace, runnerUp: 0 };
+  if (r.includes('final')) return { win: TEAM_POINTS.winner, runnerUp: TEAM_POINTS.runnerUp };
+  return { win: 0, runnerUp: 0 };
+}
+
+// The winning side of a finished match, accounting for a penalty shootout when
+// regulation/extra-time is level. Returns null for an unresolved draw (groups).
+export function matchWinner(event: WCEvent): 'home' | 'away' | null {
+  const h = event.homeScore?.current ?? 0;
+  const a = event.awayScore?.current ?? 0;
+  if (h > a) return 'home';
+  if (a > h) return 'away';
+  const ph = event.penaltyScore?.home ?? null;
+  const pa = event.penaltyScore?.away ?? null;
+  if (ph != null && pa != null) {
+    if (ph > pa) return 'home';
+    if (pa > ph) return 'away';
+  }
+  return null;
+}
 
 export type LiveStats = {
   players: Map<string, PlayerStats>; // API player name → stats
@@ -46,7 +82,7 @@ export function accumulateLines(
     return keepers.get(name)!;
   };
   const teamStats = (name: string) => {
-    if (!teams.has(name)) teams.set(name, { goalsScored: 0, wins: 0, shutouts: 0 });
+    if (!teams.has(name)) teams.set(name, { goalsScored: 0, resultPoints: 0, shutouts: 0 });
     return teams.get(name)!;
   };
 
@@ -60,9 +96,18 @@ export function accumulateLines(
     teamStats(event.awayTeam.name).goalsScored += awayGoals;
 
     // Wins & clean sheets aren't settled until full time.
+    const winner = finished ? matchWinner(event) : null;
     if (finished) {
-      if (homeGoals > awayGoals) teamStats(event.homeTeam.name).wins += 1;
-      else if (awayGoals > homeGoals) teamStats(event.awayTeam.name).wins += 1;
+      // Round-aware result points: group win = 3, knockout win = per-round
+      // bonus, final winner/loser = winner/runner-up bonus, 3rd-place win = third.
+      const rp = roundResultPoints(event.round);
+      if (winner === 'home') {
+        teamStats(event.homeTeam.name).resultPoints += rp.win;
+        if (rp.runnerUp) teamStats(event.awayTeam.name).resultPoints += rp.runnerUp;
+      } else if (winner === 'away') {
+        teamStats(event.awayTeam.name).resultPoints += rp.win;
+        if (rp.runnerUp) teamStats(event.homeTeam.name).resultPoints += rp.runnerUp;
+      }
       if (awayGoals === 0) teamStats(event.homeTeam.name).shutouts += 1;
       if (homeGoals === 0) teamStats(event.awayTeam.name).shutouts += 1;
     }
@@ -82,10 +127,9 @@ export function accumulateLines(
 
         if (finished) {
           const isHome = line.teamId === event.homeTeam.id;
-          const ownGoals = isHome ? homeGoals : awayGoals;
           const oppGoals = isHome ? awayGoals : homeGoals;
           if (oppGoals === 0) ks.shutouts += 1;
-          if (ownGoals > oppGoals) ks.wins += 1;
+          if ((winner === 'home' && isHome) || (winner === 'away' && !isHome)) ks.wins += 1;
         }
       }
     }
@@ -114,7 +158,7 @@ export function computeKeeperPoints(stats: KeeperStats): number {
 export function computeTeamPointsFromStats(stats: TeamStats): number {
   return (
     stats.goalsScored * TEAM_POINTS.goal +
-    stats.wins * TEAM_POINTS.groupWin +
+    stats.resultPoints +
     stats.shutouts * TEAM_POINTS.shutout
   );
 }

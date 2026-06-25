@@ -71,6 +71,36 @@ const GOAL_WINDOW_MS = 10 * 60 * 1000;
 let prevScores: Map<number, { h: number; a: number }> | null = null;
 let recentGoal: { team: string; at: number } | null = null;
 
+// One-off commissioner exceptions: pick label → fixture IDs that must NOT count
+// toward that pick. The commissioner approved a mid-tournament player swap, so
+// the affected pick is credited only from the swap onward. Freese was swapped in
+// after USA's opening match (fixture 1489370 vs Paraguay), so that match's points
+// (a 3-pt win) don't count — leaving his total at 8 from the Australia game.
+const PICK_MATCH_EXCLUSIONS: Record<string, number[]> = {
+  '🇺🇸Freese': [1489370],
+};
+
+// Recompute a single player/keeper pick's value from the matches that count for
+// it, excluding any fixtures barred by a commissioner exception. Re-running the
+// accumulation on the filtered slice keeps this correct without perturbing the
+// global stats every other pick is scored from.
+function pickValueExcluding(
+  results: { event: WCEvent; lines: PlayerLine[] }[],
+  label: string,
+  kind: 'player' | 'keeper',
+  excluded: Set<number>
+): number {
+  const filtered = results.filter(({ event }) => !excluded.has(event.id));
+  const s = accumulateLines(filtered);
+  const teamOf = (n: string) => s.playerTeam.get(n);
+  const pool = kind === 'keeper' ? s.keepers : s.players;
+  const m = findPlayerByCountry(label, pool.keys(), teamOf);
+  if (!m) return 0;
+  return kind === 'keeper'
+    ? computeKeeperPoints(s.keepers.get(m)!)
+    : computePlayerPoints(s.players.get(m)!);
+}
+
 export async function computeStandings(entries: Entry[]): Promise<StandingsPayload> {
   const standings = await fetchWCStandings();
   const fixtures = await fetchWCFixtures(groupLetterMap(standings));
@@ -127,10 +157,20 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     if (m) pickValues.set(label, teamPoints.get(m) ?? 0);
   }
   for (const label of playerLabels) {
+    const excl = PICK_MATCH_EXCLUSIONS[label];
+    if (excl) {
+      pickValues.set(label, pickValueExcluding(lineResults, label, 'player', new Set(excl)));
+      continue;
+    }
     const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
     if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
   }
   for (const label of keeperLabels) {
+    const excl = PICK_MATCH_EXCLUSIONS[label];
+    if (excl) {
+      pickValues.set(label, pickValueExcluding(lineResults, label, 'keeper', new Set(excl)));
+      continue;
+    }
     const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
     if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
   }

@@ -48,8 +48,12 @@ export type WCEvent = {
   awayTeam: { name: string; id: number };
   homeScore: { current: number };
   awayScore: { current: number };
+  // Penalty-shootout score, when a knockout tie is decided on penalties.
+  penaltyScore?: { home: number | null; away: number | null };
   status: { description: string; type: 'notstarted' | 'inprogress' | 'finished' };
   tournament: { groupSign?: string };
+  // Raw API round label, e.g. "Group Stage - 1", "Round of 32", "Final".
+  round: string;
   startTimestamp: number;
 };
 
@@ -76,6 +80,7 @@ type AFFixture = {
     away: { id: number; name: string };
   };
   goals: { home: number | null; away: number | null };
+  score?: { penalty?: { home: number | null; away: number | null } };
   league: { round: string };
 };
 
@@ -116,11 +121,13 @@ function toWCEvent(f: AFFixture, groupByTeam: Map<number, string>): WCEvent {
     awayTeam: { name: f.teams.away.name, id: f.teams.away.id },
     homeScore: { current: f.goals.home ?? 0 },
     awayScore: { current: f.goals.away ?? 0 },
+    penaltyScore: f.score?.penalty,
     status: {
       description: shortStatusLabel(f.fixture.status.short, f.fixture.status.elapsed),
       type: mapStatus(f.fixture.status.short),
     },
     tournament: { groupSign: groupByTeam.get(f.teams.home.id) },
+    round: f.league.round,
     startTimestamp: f.fixture.timestamp,
   };
 }

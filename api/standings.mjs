@@ -42,11 +42,13 @@ function toWCEvent(f, groupByTeam) {
     awayTeam: { name: f.teams.away.name, id: f.teams.away.id },
     homeScore: { current: f.goals.home ?? 0 },
     awayScore: { current: f.goals.away ?? 0 },
+    penaltyScore: f.score?.penalty,
     status: {
       description: shortStatusLabel(f.fixture.status.short, f.fixture.status.elapsed),
       type: mapStatus(f.fixture.status.short)
     },
     tournament: { groupSign: groupByTeam.get(f.teams.home.id) },
+    round: f.league.round,
     startTimestamp: f.fixture.timestamp
   };
 }
@@ -278,6 +280,31 @@ function teamKey(name) {
 }
 
 // src/lib/pointCalc.ts
+function roundResultPoints(round) {
+  const r = round.toLowerCase();
+  if (r.includes("group")) return { win: TEAM_POINTS.groupWin, runnerUp: 0 };
+  if (r.includes("round of 32")) return { win: TEAM_POINTS.r32Win, runnerUp: 0 };
+  if (r.includes("round of 16")) return { win: TEAM_POINTS.r16Win, runnerUp: 0 };
+  if (r.includes("quarter")) return { win: TEAM_POINTS.qfWin, runnerUp: 0 };
+  if (r.includes("semi")) return { win: TEAM_POINTS.sfWin, runnerUp: 0 };
+  if (r.includes("3rd place") || r.includes("third place"))
+    return { win: TEAM_POINTS.thirdPlace, runnerUp: 0 };
+  if (r.includes("final")) return { win: TEAM_POINTS.winner, runnerUp: TEAM_POINTS.runnerUp };
+  return { win: 0, runnerUp: 0 };
+}
+function matchWinner(event) {
+  const h = event.homeScore?.current ?? 0;
+  const a = event.awayScore?.current ?? 0;
+  if (h > a) return "home";
+  if (a > h) return "away";
+  const ph = event.penaltyScore?.home ?? null;
+  const pa = event.penaltyScore?.away ?? null;
+  if (ph != null && pa != null) {
+    if (ph > pa) return "home";
+    if (pa > ph) return "away";
+  }
+  return null;
+}
 function accumulateLines(events) {
   const players = /* @__PURE__ */ new Map();
   const keepers = /* @__PURE__ */ new Map();
@@ -292,7 +319,7 @@ function accumulateLines(events) {
     return keepers.get(name);
   };
   const teamStats = (name) => {
-    if (!teams.has(name)) teams.set(name, { goalsScored: 0, wins: 0, shutouts: 0 });
+    if (!teams.has(name)) teams.set(name, { goalsScored: 0, resultPoints: 0, shutouts: 0 });
     return teams.get(name);
   };
   for (const { event, lines } of events) {
@@ -301,9 +328,16 @@ function accumulateLines(events) {
     const finished = event.status.type === "finished";
     teamStats(event.homeTeam.name).goalsScored += homeGoals;
     teamStats(event.awayTeam.name).goalsScored += awayGoals;
+    const winner = finished ? matchWinner(event) : null;
     if (finished) {
-      if (homeGoals > awayGoals) teamStats(event.homeTeam.name).wins += 1;
-      else if (awayGoals > homeGoals) teamStats(event.awayTeam.name).wins += 1;
+      const rp = roundResultPoints(event.round);
+      if (winner === "home") {
+        teamStats(event.homeTeam.name).resultPoints += rp.win;
+        if (rp.runnerUp) teamStats(event.awayTeam.name).resultPoints += rp.runnerUp;
+      } else if (winner === "away") {
+        teamStats(event.awayTeam.name).resultPoints += rp.win;
+        if (rp.runnerUp) teamStats(event.homeTeam.name).resultPoints += rp.runnerUp;
+      }
       if (awayGoals === 0) teamStats(event.homeTeam.name).shutouts += 1;
       if (homeGoals === 0) teamStats(event.awayTeam.name).shutouts += 1;
     }
@@ -319,10 +353,9 @@ function accumulateLines(events) {
         ks.saves += line.saves;
         if (finished) {
           const isHome = line.teamId === event.homeTeam.id;
-          const ownGoals = isHome ? homeGoals : awayGoals;
           const oppGoals = isHome ? awayGoals : homeGoals;
           if (oppGoals === 0) ks.shutouts += 1;
-          if (ownGoals > oppGoals) ks.wins += 1;
+          if (winner === "home" && isHome || winner === "away" && !isHome) ks.wins += 1;
         }
       }
     }
@@ -336,7 +369,7 @@ function computeKeeperPoints(stats) {
   return stats.wins * KEEPER_POINTS.win + stats.shutouts * KEEPER_POINTS.shutout + stats.saves * KEEPER_POINTS.save;
 }
 function computeTeamPointsFromStats(stats) {
-  return stats.goalsScored * TEAM_POINTS.goal + stats.wins * TEAM_POINTS.groupWin + stats.shutouts * TEAM_POINTS.shutout;
+  return stats.goalsScored * TEAM_POINTS.goal + stats.resultPoints + stats.shutouts * TEAM_POINTS.shutout;
 }
 function applyGroupBonuses(teamPoints, standings) {
   const result = new Map(teamPoints);
@@ -442,6 +475,18 @@ async function linesFor(event) {
 var GOAL_WINDOW_MS = 10 * 60 * 1e3;
 var prevScores = null;
 var recentGoal = null;
+var PICK_MATCH_EXCLUSIONS = {
+  "\u{1F1FA}\u{1F1F8}Freese": [1489370]
+};
+function pickValueExcluding(results, label, kind, excluded) {
+  const filtered = results.filter(({ event }) => !excluded.has(event.id));
+  const s = accumulateLines(filtered);
+  const teamOf = (n) => s.playerTeam.get(n);
+  const pool = kind === "keeper" ? s.keepers : s.players;
+  const m = findPlayerByCountry(label, pool.keys(), teamOf);
+  if (!m) return 0;
+  return kind === "keeper" ? computeKeeperPoints(s.keepers.get(m)) : computePlayerPoints(s.players.get(m));
+}
 async function computeStandings(entries2) {
   const standings = await fetchWCStandings();
   const fixtures = await fetchWCFixtures(groupLetterMap(standings));
@@ -488,10 +533,20 @@ async function computeStandings(entries2) {
     if (m) pickValues.set(label, teamPoints.get(m) ?? 0);
   }
   for (const label of playerLabels) {
+    const excl = PICK_MATCH_EXCLUSIONS[label];
+    if (excl) {
+      pickValues.set(label, pickValueExcluding(lineResults, label, "player", new Set(excl)));
+      continue;
+    }
     const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
     if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)));
   }
   for (const label of keeperLabels) {
+    const excl = PICK_MATCH_EXCLUSIONS[label];
+    if (excl) {
+      pickValues.set(label, pickValueExcluding(lineResults, label, "keeper", new Set(excl)));
+      continue;
+    }
     const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
     if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)));
   }
