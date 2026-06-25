@@ -11,6 +11,7 @@
     "test": "tsx --test tests/*.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "@tailwindcss/vite": "^4.3.1",
     "@tanstack/react-query": "^5.101.1",
     "axios": "^1.18.1",

@@ -8,6 +8,7 @@ import { StandingsGrid } from './components/StandingsGrid';
 import { RulesPopover } from './components/RulesPopover';
 import { GoalAnimation } from './components/GoalAnimation';
 import { SchedulePage } from './components/SchedulePage';
+import { ChatPage } from './components/ChatPage';
 import { BottomNav } from './components/BottomNav';
 import { useLivePoints } from './hooks/useLivePoints';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -24,7 +25,7 @@ function PoolApp() {
   const [view, setView] = useState<'cards' | 'grid'>(
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
   );
-  const [page, setPage] = useState<'standings' | 'schedule'>('standings');
+  const [page, setPage] = useState<'standings' | 'schedule' | 'chat'>('standings');
 
   // Fire the goal animation whenever the server's goalSeq counter increases.
   // Each increment = one new goal detected. The client stores the last seq it
@@ -57,7 +58,9 @@ function PoolApp() {
     <div className="min-h-screen bg-gray-50 pb-16 dark:bg-gray-900">
       {goal && <GoalAnimation key={goal.key} kit={goal.kit} onDone={() => setGoal(null)} />}
       <Header dark={dark} onToggleDark={toggle} todayMatchCount={livePoints?.todayMatchCount} />
-      {page === 'schedule' && livePoints ? (
+      {page === 'chat' ? (
+        <ChatPage />
+      ) : page === 'schedule' && livePoints ? (
         <SchedulePage
           allFixtures={livePoints.allFixtures}
           matchImpacts={livePoints.allMatchImpacts}

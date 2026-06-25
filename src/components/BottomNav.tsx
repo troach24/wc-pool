@@ -1,4 +1,4 @@
-type Page = 'standings' | 'schedule';
+type Page = 'standings' | 'schedule' | 'chat';
 
 type Props = {
   page: Page;
@@ -34,6 +34,17 @@ export function BottomNav({ page, onNavigate, hasLive }: Props) {
           )}
           <span className="text-lg leading-none">📅</span>
           Schedule
+        </button>
+        <button
+          onClick={() => onNavigate('chat')}
+          className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+            page === 'chat'
+              ? 'text-[#1a3a6b] dark:text-blue-400'
+              : 'text-gray-400 dark:text-gray-500'
+          }`}
+        >
+          <span className="text-lg leading-none">💬</span>
+          Chat
         </button>
       </div>
       {/* iOS safe area */}
