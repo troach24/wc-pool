@@ -44,7 +44,16 @@ export function resolveAlias(raw: string): string {
 export function matchesApiName(pickLabel: string, apiName: string): boolean {
   const pickNorm = resolveAlias(stripFlag(pickLabel));
   const apiNorm = normalize(apiName);
-  // Match if pick name appears anywhere in API name or vice versa
-  return apiNorm.includes(pickNorm) || pickNorm.includes(apiNorm) ||
-    pickNorm.split(' ').some(word => word.length > 3 && apiNorm.includes(word));
+
+  if (!pickNorm || !apiNorm) return false;
+  if (pickNorm === apiNorm) return true;
+  if (apiNorm.includes(pickNorm) || pickNorm.includes(apiNorm)) return true;
+
+  const pickTokens = pickNorm.split(' ').filter(Boolean);
+  const apiTokens = apiNorm.split(' ').filter(Boolean);
+  if (pickTokens.length === 0 || apiTokens.length === 0) return false;
+
+  const pickSet = new Set(pickTokens);
+  const apiSet = new Set(apiTokens);
+  return pickTokens.every((token) => apiSet.has(token)) || apiTokens.every((token) => pickSet.has(token));
 }

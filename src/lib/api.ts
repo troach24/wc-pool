@@ -32,6 +32,7 @@ async function get<T>(path: string, attempt = 0): Promise<T> {
 export type PlayerLine = {
   name: string;
   teamId: number;
+  teamName: string; // national team — used to disambiguate shared surnames
   position: string | null; // 'G' | 'D' | 'M' | 'F'
   minutes: number | null;
   goals: number;
@@ -79,7 +80,7 @@ type AFFixture = {
 };
 
 type AFPlayersResp = Array<{
-  team: { id: number };
+  team: { id: number; name: string };
   players: Array<{
     player: { name: string };
     statistics: Array<{
@@ -173,6 +174,7 @@ export async function fetchFixturePlayers(fixtureId: number): Promise<PlayerLine
       out.push({
         name: p.player.name,
         teamId: team.team.id,
+        teamName: team.team.name,
         position: s.games?.position ?? null,
         minutes: s.games?.minutes ?? null,
         goals: s.goals?.total ?? 0,

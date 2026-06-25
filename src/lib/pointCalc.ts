@@ -1,6 +1,7 @@
 import type { PlayerLine, StandingRow, WCEvent } from './api';
 import { PLAYER_POINTS, TEAM_POINTS, KEEPER_POINTS } from './scoring';
 import { matchesApiName, stripFlag } from './nameMap';
+import { countryOfFlag, teamKey } from './teamCountry';
 
 export type PlayerStats = {
   goals: number;
@@ -25,6 +26,7 @@ export type LiveStats = {
   players: Map<string, PlayerStats>; // API player name → stats
   keepers: Map<string, KeeperStats>; // API keeper name → stats (only keepers who played)
   teams: Map<string, TeamStats>; // API team name → stats
+  playerTeam: Map<string, string>; // API player name → national team (for disambiguation)
 };
 
 export function accumulateLines(
@@ -33,6 +35,7 @@ export function accumulateLines(
   const players = new Map<string, PlayerStats>();
   const keepers = new Map<string, KeeperStats>();
   const teams = new Map<string, TeamStats>();
+  const playerTeam = new Map<string, string>();
 
   const playerStats = (name: string) => {
     if (!players.has(name)) players.set(name, { goals: 0, assists: 0, yellowCards: 0, redCards: 0 });
@@ -70,6 +73,7 @@ export function accumulateLines(
       ps.assists += line.assists;
       ps.yellowCards += line.yellow;
       ps.redCards += line.red;
+      if (line.teamName) playerTeam.set(line.name, line.teamName);
 
       // Keeper scoring — only keepers who actually played.
       if (line.position === 'G' && (line.minutes ?? 0) > 0) {
@@ -87,7 +91,7 @@ export function accumulateLines(
     }
   }
 
-  return { players, keepers, teams };
+  return { players, keepers, teams, playerTeam };
 }
 
 export function computePlayerPoints(stats: PlayerStats): number {
@@ -151,6 +155,43 @@ export function findMatchingApiName(
   return null;
 }
 
+// Match a player/keeper pick to an API name, disambiguating shared surnames by
+// the pick's country (from its flag). When the pick's country is known, only a
+// candidate on that national team counts — so "🇪🇬Salah" can't match Morocco's
+// Salah-Eddine. Falls back to plain name matching when the flag is unknown.
+export function findPlayerByCountry(
+  pickLabel: string,
+  apiNames: Iterable<string>,
+  teamOf: (apiName: string) => string | undefined
+): string | null {
+  const stripped = stripFlag(pickLabel);
+  const country = countryOfFlag(pickLabel);
+  const nameMatches: string[] = [];
+  for (const apiName of apiNames) {
+    if (matchesApiName(stripped, apiName)) nameMatches.push(apiName);
+  }
+  if (nameMatches.length === 0) return null;
+  if (!country) return nameMatches[0]; // unknown flag → best-effort
+  const inCountry = nameMatches.find((n) => teamKey(teamOf(n) ?? '') === country);
+  // Country known but no same-nation candidate → don't credit the wrong player.
+  return inCountry ?? null;
+}
+
+// Match a team pick to an API team name — by country first (robust to naming
+// like "Côte d'Ivoire" vs "Ivory Coast"), then by name.
+export function findTeamByCountry(
+  pickLabel: string,
+  teamNames: Iterable<string>
+): string | null {
+  const country = countryOfFlag(pickLabel);
+  if (country) {
+    for (const n of teamNames) {
+      if (teamKey(n) === country) return n;
+    }
+  }
+  return findMatchingApiName(pickLabel, teamNames);
+}
+
 export type PickImpact = { label: string; points: number };
 
 // Which pool picks earned points in a single match (for the live banner).
@@ -164,10 +205,12 @@ export function computeMatchImpacts(
   const impacts: PickImpact[] = [];
   const seen = new Set<string>();
 
+  const teamOf = (n: string) => matchStats.playerTeam.get(n);
+
   for (const label of poolPickLabels) {
     if (seen.has(label)) continue;
 
-    const keeperMatch = findMatchingApiName(label, matchStats.keepers.keys());
+    const keeperMatch = findPlayerByCountry(label, matchStats.keepers.keys(), teamOf);
     if (keeperMatch) {
       const pts = computeKeeperPoints(matchStats.keepers.get(keeperMatch)!);
       if (pts > 0) {
@@ -177,7 +220,7 @@ export function computeMatchImpacts(
       }
     }
 
-    const playerMatch = findMatchingApiName(label, matchStats.players.keys());
+    const playerMatch = findPlayerByCountry(label, matchStats.players.keys(), teamOf);
     if (playerMatch) {
       const pts = computePlayerPoints(matchStats.players.get(playerMatch)!);
       if (pts > 0) {

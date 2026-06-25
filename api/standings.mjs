@@ -79,6 +79,7 @@ async function fetchFixturePlayers(fixtureId) {
       out.push({
         name: p.player.name,
         teamId: team.team.id,
+        teamName: team.team.name,
         position: s.games?.position ?? null,
         minutes: s.games?.minutes ?? null,
         goals: s.goals?.total ?? 0,
@@ -159,7 +160,121 @@ function resolveAlias(raw) {
 function matchesApiName(pickLabel, apiName) {
   const pickNorm = resolveAlias(stripFlag(pickLabel));
   const apiNorm = normalize(apiName);
-  return apiNorm.includes(pickNorm) || pickNorm.includes(apiNorm) || pickNorm.split(" ").some((word) => word.length > 3 && apiNorm.includes(word));
+  if (!pickNorm || !apiNorm) return false;
+  if (pickNorm === apiNorm) return true;
+  if (apiNorm.includes(pickNorm) || pickNorm.includes(apiNorm)) return true;
+  const pickTokens = pickNorm.split(" ").filter(Boolean);
+  const apiTokens = apiNorm.split(" ").filter(Boolean);
+  if (pickTokens.length === 0 || apiTokens.length === 0) return false;
+  const pickSet = new Set(pickTokens);
+  const apiSet = new Set(apiTokens);
+  return pickTokens.every((token) => apiSet.has(token)) || apiTokens.every((token) => pickSet.has(token));
+}
+
+// src/lib/teamCountry.ts
+var ALPHA2 = {
+  AR: "argentina",
+  AU: "australia",
+  AT: "austria",
+  BE: "belgium",
+  BA: "bosnia",
+  BR: "brazil",
+  CM: "cameroon",
+  CA: "canada",
+  CL: "chile",
+  CO: "colombia",
+  CR: "costa rica",
+  HR: "croatia",
+  CZ: "czechia",
+  DK: "denmark",
+  CD: "dr congo",
+  EC: "ecuador",
+  EG: "egypt",
+  SV: "el salvador",
+  FR: "france",
+  DE: "germany",
+  GH: "ghana",
+  GR: "greece",
+  HT: "haiti",
+  HN: "honduras",
+  IS: "iceland",
+  IR: "iran",
+  IQ: "iraq",
+  IT: "italy",
+  CI: "ivory coast",
+  JM: "jamaica",
+  JP: "japan",
+  JO: "jordan",
+  KR: "south korea",
+  MX: "mexico",
+  MA: "morocco",
+  NL: "netherlands",
+  NZ: "new zealand",
+  NG: "nigeria",
+  NO: "norway",
+  PA: "panama",
+  PY: "paraguay",
+  PE: "peru",
+  PL: "poland",
+  PT: "portugal",
+  QA: "qatar",
+  SA: "saudi arabia",
+  SN: "senegal",
+  RS: "serbia",
+  SK: "slovakia",
+  SI: "slovenia",
+  ZA: "south africa",
+  ES: "spain",
+  SE: "sweden",
+  CH: "switzerland",
+  TN: "tunisia",
+  TR: "turkey",
+  UA: "ukraine",
+  UY: "uruguay",
+  US: "usa",
+  UZ: "uzbekistan",
+  VE: "venezuela",
+  WS: "samoa",
+  DZ: "algeria"
+};
+var TEAM_ALIASES = {
+  "united states": "usa",
+  usa: "usa",
+  turkiye: "turkey",
+  turkey: "turkey",
+  "cote divoire": "ivory coast",
+  "cote d ivoire": "ivory coast",
+  "ivory coast": "ivory coast",
+  "korea republic": "south korea",
+  "south korea": "south korea",
+  "korea dpr": "north korea",
+  "ir iran": "iran",
+  iran: "iran",
+  czechia: "czechia",
+  "czech republic": "czechia",
+  "dr congo": "dr congo",
+  "congo dr": "dr congo",
+  "bosnia and herzegovina": "bosnia",
+  "bosnia herzegovina": "bosnia"
+};
+function countryOfFlag(label) {
+  if (label.includes("\u{1F3F4}")) {
+    const tags = [...label].map((c) => c.codePointAt(0)).filter((cp) => cp >= 917504 && cp <= 917631).map((cp) => String.fromCodePoint(cp - 917504)).join("");
+    if (tags.includes("gbeng")) return "england";
+    if (tags.includes("gbsct")) return "scotland";
+    if (tags.includes("gbwls")) return "wales";
+    return null;
+  }
+  const ri = [...label].map((c) => c.codePointAt(0)).filter((cp) => cp >= 127462 && cp <= 127487);
+  if (ri.length >= 2) {
+    const a2 = String.fromCharCode(65 + (ri[0] - 127462)) + String.fromCharCode(65 + (ri[1] - 127462));
+    return ALPHA2[a2] ?? null;
+  }
+  return null;
+}
+function teamKey(name) {
+  const n = normalize(name);
+  return TEAM_ALIASES[n] ?? n;
 }
 
 // src/lib/pointCalc.ts
@@ -167,6 +282,7 @@ function accumulateLines(events) {
   const players = /* @__PURE__ */ new Map();
   const keepers = /* @__PURE__ */ new Map();
   const teams = /* @__PURE__ */ new Map();
+  const playerTeam = /* @__PURE__ */ new Map();
   const playerStats = (name) => {
     if (!players.has(name)) players.set(name, { goals: 0, assists: 0, yellowCards: 0, redCards: 0 });
     return players.get(name);
@@ -197,6 +313,7 @@ function accumulateLines(events) {
       ps.assists += line.assists;
       ps.yellowCards += line.yellow;
       ps.redCards += line.red;
+      if (line.teamName) playerTeam.set(line.name, line.teamName);
       if (line.position === "G" && (line.minutes ?? 0) > 0) {
         const ks = keeperStats(line.name);
         ks.saves += line.saves;
@@ -210,7 +327,7 @@ function accumulateLines(events) {
       }
     }
   }
-  return { players, keepers, teams };
+  return { players, keepers, teams, playerTeam };
 }
 function computePlayerPoints(stats) {
   return stats.goals * PLAYER_POINTS.goal + stats.assists * PLAYER_POINTS.assist + stats.yellowCards * PLAYER_POINTS.yellowCard + stats.redCards * PLAYER_POINTS.redCard;
@@ -243,12 +360,34 @@ function findMatchingApiName(pickLabel, apiNames) {
   }
   return null;
 }
+function findPlayerByCountry(pickLabel, apiNames, teamOf) {
+  const stripped = stripFlag(pickLabel);
+  const country = countryOfFlag(pickLabel);
+  const nameMatches = [];
+  for (const apiName of apiNames) {
+    if (matchesApiName(stripped, apiName)) nameMatches.push(apiName);
+  }
+  if (nameMatches.length === 0) return null;
+  if (!country) return nameMatches[0];
+  const inCountry = nameMatches.find((n) => teamKey(teamOf(n) ?? "") === country);
+  return inCountry ?? null;
+}
+function findTeamByCountry(pickLabel, teamNames) {
+  const country = countryOfFlag(pickLabel);
+  if (country) {
+    for (const n of teamNames) {
+      if (teamKey(n) === country) return n;
+    }
+  }
+  return findMatchingApiName(pickLabel, teamNames);
+}
 function computeMatchImpacts(matchStats, matchTeamPoints, poolPickLabels) {
   const impacts = [];
   const seen = /* @__PURE__ */ new Set();
+  const teamOf = (n) => matchStats.playerTeam.get(n);
   for (const label of poolPickLabels) {
     if (seen.has(label)) continue;
-    const keeperMatch = findMatchingApiName(label, matchStats.keepers.keys());
+    const keeperMatch = findPlayerByCountry(label, matchStats.keepers.keys(), teamOf);
     if (keeperMatch) {
       const pts = computeKeeperPoints(matchStats.keepers.get(keeperMatch));
       if (pts > 0) {
@@ -257,7 +396,7 @@ function computeMatchImpacts(matchStats, matchTeamPoints, poolPickLabels) {
         continue;
       }
     }
-    const playerMatch = findMatchingApiName(label, matchStats.players.keys());
+    const playerMatch = findPlayerByCountry(label, matchStats.players.keys(), teamOf);
     if (playerMatch) {
       const pts = computePlayerPoints(matchStats.players.get(playerMatch));
       if (pts > 0) {
@@ -342,17 +481,18 @@ async function computeStandings(entries2) {
     teamPointsRaw.set(teamName, computeTeamPointsFromStats(ts));
   }
   const teamPoints = applyGroupBonuses(teamPointsRaw, standings);
+  const teamOf = (n) => stats.playerTeam.get(n);
   const pickValues = /* @__PURE__ */ new Map();
   for (const label of teamLabels) {
-    const m = findMatchingApiName(label, teamPoints.keys());
+    const m = findTeamByCountry(label, teamPoints.keys());
     if (m) pickValues.set(label, teamPoints.get(m) ?? 0);
   }
   for (const label of playerLabels) {
-    const m = findMatchingApiName(label, stats.players.keys());
+    const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
     if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)));
   }
   for (const label of keeperLabels) {
-    const m = findMatchingApiName(label, stats.keepers.keys());
+    const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
     if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)));
   }
   const allImpacts = lineResults.map(({ event, lines }) => {

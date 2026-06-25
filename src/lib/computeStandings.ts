@@ -16,7 +16,8 @@ import {
   computeTeamPointsFromStats,
   computeMatchImpacts,
   applyGroupBonuses,
-  findMatchingApiName,
+  findPlayerByCountry,
+  findTeamByCountry,
   type PickImpact,
 } from './pointCalc';
 import type { Entry } from './types';
@@ -119,17 +120,18 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
   }
   const teamPoints = applyGroupBonuses(teamPointsRaw, standings);
 
+  const teamOf = (n: string) => stats.playerTeam.get(n);
   const pickValues = new Map<string, number>();
   for (const label of teamLabels) {
-    const m = findMatchingApiName(label, teamPoints.keys());
+    const m = findTeamByCountry(label, teamPoints.keys());
     if (m) pickValues.set(label, teamPoints.get(m) ?? 0);
   }
   for (const label of playerLabels) {
-    const m = findMatchingApiName(label, stats.players.keys());
+    const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
     if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
   }
   for (const label of keeperLabels) {
-    const m = findMatchingApiName(label, stats.keepers.keys());
+    const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
     if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
   }
 
