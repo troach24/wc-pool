@@ -41,19 +41,21 @@ export function Header({ dark, onToggleDark }: Props) {
           </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <span className="rounded-full border border-[#f0a500]/30 bg-[#f0a500]/15 px-3 py-1 text-xs font-medium text-[#f0a500]">
             🏆 $1,500 pot
           </span>
-          <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
-            1st $1,000
-          </span>
-          <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
-            2nd $350
-          </span>
-          <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
-            3rd $150
-          </span>
+          <div className="flex gap-2">
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
+              🥇 $1,000
+            </span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
+              🥈 $350
+            </span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/75">
+              🥉 $150
+            </span>
+          </div>
         </div>
       </div>
     </header>
