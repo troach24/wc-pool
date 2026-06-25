@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import type { WCEvent } from '../lib/api';
 import type { MatchImpact } from '../hooks/useLivePoints';
+import type { Entry } from '../lib/types';
+import { countryOfFlag, teamKey } from '../lib/teamCountry';
 
 type Props = {
   allFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
+  entries: Entry[];
 };
 
 function localDateStr(ts: number) {
@@ -51,7 +54,25 @@ function DatePill({
   );
 }
 
-function FixtureRow({ event, impacts }: { event: WCEvent; impacts: MatchImpact | undefined }) {
+function picksInFixture(entries: Entry[], event: WCEvent): string[] {
+  const homeKey = teamKey(event.homeTeam.name);
+  const awayKey = teamKey(event.awayTeam.name);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const entry of entries) {
+    for (const pick of [...entry.teams, ...entry.players, ...entry.keepers]) {
+      if (seen.has(pick.label)) continue;
+      const country = countryOfFlag(pick.label);
+      if (country && (country === homeKey || country === awayKey)) {
+        seen.add(pick.label);
+        result.push(pick.label);
+      }
+    }
+  }
+  return result;
+}
+
+function FixtureRow({ event, impacts, upcomingPicks }: { event: WCEvent; impacts: MatchImpact | undefined; upcomingPicks?: string[] }) {
   const live = event.status.type === 'inprogress';
   const upcoming = event.status.type === 'notstarted';
   const homeWin = event.homeScore.current > event.awayScore.current;
@@ -93,12 +114,18 @@ function FixtureRow({ event, impacts }: { event: WCEvent; impacts: MatchImpact |
       </div>
 
       <div className="flex w-[110px] flex-shrink-0 flex-col gap-0.5 border-l border-white/10 pl-3">
-        <span className="text-[9px] uppercase tracking-wide text-white/30">Pool impact</span>
+        <span className="text-[9px] uppercase tracking-wide text-white/30">
+          {upcoming && upcomingPicks?.length ? 'Pool picks' : 'Pool impact'}
+        </span>
         {impacts?.impacts.length ? (
           impacts.impacts.slice(0, 2).map((imp) => (
             <span key={imp.label} className="truncate text-[11px] font-semibold text-[#f0a500]">
               {imp.label} +{imp.points}
             </span>
+          ))
+        ) : upcomingPicks?.length ? (
+          upcomingPicks.slice(0, 3).map((label) => (
+            <span key={label} className="truncate text-[11px] text-white/50">{label}</span>
           ))
         ) : (
           <span className="text-[11px] text-white/30">—</span>
@@ -108,7 +135,7 @@ function FixtureRow({ event, impacts }: { event: WCEvent; impacts: MatchImpact |
   );
 }
 
-export function SchedulePage({ allFixtures, matchImpacts }: Props) {
+export function SchedulePage({ allFixtures, matchImpacts, entries }: Props) {
   const localToday = new Date().toLocaleDateString();
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -191,7 +218,12 @@ export function SchedulePage({ allFixtures, matchImpacts }: Props) {
         ) : (
           <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0d1b2a]">
             {shown.map((event) => (
-              <FixtureRow key={event.id} event={event} impacts={impactMap.get(event.id)} />
+              <FixtureRow
+                key={event.id}
+                event={event}
+                impacts={impactMap.get(event.id)}
+                upcomingPicks={event.status.type === 'notstarted' ? picksInFixture(entries, event) : undefined}
+              />
             ))}
           </div>
         )}

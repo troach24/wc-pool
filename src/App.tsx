@@ -77,6 +77,7 @@ function PoolApp() {
         <SchedulePage
           allFixtures={livePoints.allFixtures}
           matchImpacts={livePoints.allMatchImpacts}
+          entries={entries}
         />
       ) : (
       <main className={`mx-auto px-4 py-4 ${view === 'grid' ? 'max-w-7xl' : 'max-w-3xl'}`}>
