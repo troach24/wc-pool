@@ -20,7 +20,7 @@ export default async function handler(_req: any, res: any) {
     // Refresh fast while matches are live, slow when idle,
     // and medium when a kickoff is within the next 15 minutes.
     const live = payload.liveMatchCount > 0;
-    const imminent = !live && payload.todayFixtures.some((f) => {
+    const imminent = !live && payload.allFixtures.some((f) => {
       const msUntil = f.startTimestamp * 1000 - Date.now();
       return msUntil > 0 && msUntil < 15 * 60 * 1000;
     });

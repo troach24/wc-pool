@@ -1550,7 +1550,7 @@ async function handler(_req, res) {
   try {
     const payload = await computeStandings(entries);
     const live = payload.liveMatchCount > 0;
-    const imminent = !live && payload.todayFixtures.some((f) => {
+    const imminent = !live && payload.allFixtures.some((f) => {
       const msUntil = f.startTimestamp * 1e3 - Date.now();
       return msUntil > 0 && msUntil < 15 * 60 * 1e3;
     });
