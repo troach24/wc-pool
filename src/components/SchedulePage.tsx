@@ -13,7 +13,6 @@ function formatKickoff(ts: number) {
 
 function FixtureRow({ event, impacts }: { event: WCEvent; impacts: MatchImpact | undefined }) {
   const live = event.status.type === 'inprogress';
-  const finished = event.status.type === 'finished';
   const upcoming = event.status.type === 'notstarted';
   const homeWin = event.homeScore.current > event.awayScore.current;
   const awayWin = event.awayScore.current > event.homeScore.current;
