@@ -50,10 +50,6 @@ export function VerifiedBanner({ lastUpdated, isFetching, liveCount }: Props) {
         </span>
       </div>
 
-      {/* Bottom row: what's scored */}
-      <p className="mt-1 text-gray-500 dark:text-gray-400">
-        Goals · assists · cards · keeper saves — all live
-      </p>
     </div>
   );
 }
