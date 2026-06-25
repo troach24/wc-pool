@@ -38,16 +38,16 @@ function DatePill({
       className={`relative flex flex-shrink-0 flex-col items-center rounded-xl px-3.5 py-2 transition-colors ${
         selected
           ? 'bg-[#f0a500] text-[#0a1628]'
-          : 'bg-white/5 text-white/60 hover:bg-white/10'
+          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/5 dark:text-white/60 dark:hover:bg-white/10'
       }`}
     >
       {hasLive && (
         <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-green-400" />
       )}
-      <span className={`text-[11px] font-semibold uppercase tracking-wide ${selected ? 'text-[#0a1628]/70' : 'text-white/40'}`}>
+      <span className={`text-[11px] font-semibold uppercase tracking-wide ${selected ? 'text-[#0a1628]/70' : 'text-gray-400 dark:text-white/40'}`}>
         {label}
       </span>
-      <span className={`text-[15px] font-bold leading-tight ${selected ? 'text-[#0a1628]' : 'text-white'}`}>
+      <span className={`text-[15px] font-bold leading-tight ${selected ? 'text-[#0a1628]' : 'text-gray-800 dark:text-white'}`}>
         {sub}
       </span>
     </button>
@@ -80,20 +80,20 @@ function FixtureRow({ event, impacts, upcomingPicks }: { event: WCEvent; impacts
   const group = event.tournament.groupSign ? `GRP ${event.tournament.groupSign}` : event.round;
 
   return (
-    <div className={`flex items-center gap-3 border-b border-white/5 px-3 py-2.5 last:border-b-0 ${live ? 'bg-green-500/5' : ''}`}>
+    <div className={`flex items-center gap-3 border-b border-gray-100 dark:border-white/5 px-3 py-2.5 last:border-b-0 ${live ? 'bg-green-500/5' : ''}`}>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[13px] font-medium text-gray-100">{event.homeTeam.name}</span>
+          <span className="truncate text-[13px] font-medium text-gray-800 dark:text-gray-100">{event.homeTeam.name}</span>
           {!upcoming && (
-            <span className={`font-display text-[17px] font-bold tabular-nums ${homeWin ? 'text-[#f0a500]' : 'text-white'}`}>
+            <span className={`font-display text-[17px] font-bold tabular-nums ${homeWin ? 'text-[#f0a500]' : 'text-gray-800 dark:text-white'}`}>
               {event.homeScore.current}
             </span>
           )}
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[13px] font-medium text-gray-100">{event.awayTeam.name}</span>
+          <span className="truncate text-[13px] font-medium text-gray-800 dark:text-gray-100">{event.awayTeam.name}</span>
           {!upcoming && (
-            <span className={`font-display text-[17px] font-bold tabular-nums ${awayWin ? 'text-[#f0a500]' : 'text-white'}`}>
+            <span className={`font-display text-[17px] font-bold tabular-nums ${awayWin ? 'text-[#f0a500]' : 'text-gray-800 dark:text-white'}`}>
               {event.awayScore.current}
             </span>
           )}
@@ -102,19 +102,19 @@ function FixtureRow({ event, impacts, upcomingPicks }: { event: WCEvent; impacts
 
       <div className="flex w-10 flex-shrink-0 flex-col items-center">
         {upcoming ? (
-          <span className="text-center font-display text-[11px] font-semibold text-white/50">
+          <span className="text-center font-display text-[11px] font-semibold text-gray-400 dark:text-white/50">
             {formatKickoff(event.startTimestamp)}
           </span>
         ) : (
-          <span className={`font-display text-[13px] font-semibold ${live ? 'text-green-400' : 'text-white/40'}`}>
+          <span className={`font-display text-[13px] font-semibold ${live ? 'text-green-400' : 'text-gray-400 dark:text-white/40'}`}>
             {live ? event.status.description : 'FT'}
           </span>
         )}
-        {group && <span className="text-[9px] text-white/25">{group}</span>}
+        {group && <span className="text-[9px] text-gray-400 dark:text-white/25">{group}</span>}
       </div>
 
-      <div className="flex w-[110px] flex-shrink-0 flex-col gap-0.5 border-l border-white/10 pl-3">
-        <span className="text-[9px] uppercase tracking-wide text-white/30">
+      <div className="flex w-[110px] flex-shrink-0 flex-col gap-0.5 border-l border-gray-200 dark:border-white/10 pl-3">
+        <span className="text-[9px] uppercase tracking-wide text-gray-400 dark:text-white/30">
           {upcoming && upcomingPicks?.length ? 'Pool picks' : 'Pool impact'}
         </span>
         {impacts?.impacts.length ? (
@@ -125,10 +125,10 @@ function FixtureRow({ event, impacts, upcomingPicks }: { event: WCEvent; impacts
           ))
         ) : upcomingPicks?.length ? (
           upcomingPicks.slice(0, 3).map((label) => (
-            <span key={label} className="truncate text-[11px] text-white/50">{label}</span>
+            <span key={label} className="truncate text-[11px] text-gray-500 dark:text-white/50">{label}</span>
           ))
         ) : (
-          <span className="text-[11px] text-white/30">—</span>
+          <span className="text-[11px] text-gray-400 dark:text-white/30">—</span>
         )}
       </div>
     </div>
@@ -216,7 +216,7 @@ export function SchedulePage({ allFixtures, matchImpacts, entries }: Props) {
             No matches
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0d1b2a]">
+          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d1b2a]">
             {shown.map((event) => (
               <FixtureRow
                 key={event.id}
