@@ -7,6 +7,8 @@ import { Leaderboard } from './components/Leaderboard';
 import { StandingsGrid } from './components/StandingsGrid';
 import { RulesPopover } from './components/RulesPopover';
 import { GoalAnimation } from './components/GoalAnimation';
+import { SchedulePage } from './components/SchedulePage';
+import { BottomNav } from './components/BottomNav';
 import { useLivePoints } from './hooks/useLivePoints';
 import { useDarkMode } from './hooks/useDarkMode';
 import { fromRaw } from './lib/adapters';
@@ -22,6 +24,7 @@ function PoolApp() {
   const [view, setView] = useState<'cards' | 'grid'>(
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
   );
+  const [page, setPage] = useState<'standings' | 'schedule'>('standings');
 
   // Celebrate the most recent goal (flagged server-side, kept ~10 min), but
   // show it to each user at most once per 10 minutes — so freshly-loaded and
@@ -52,10 +55,18 @@ function PoolApp() {
     }
   }, []);
 
+  const hasLive = (livePoints?.liveMatchCount ?? 0) > 0;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 pb-16 dark:bg-gray-900">
       {goal && <GoalAnimation key={goal.key} kit={goal.kit} onDone={() => setGoal(null)} />}
       <Header dark={dark} onToggleDark={toggle} todayMatchCount={livePoints?.todayMatchCount} />
+      {page === 'schedule' && livePoints ? (
+        <SchedulePage
+          todayFixtures={livePoints.todayFixtures}
+          matchImpacts={livePoints.matchImpacts}
+        />
+      ) : (
       <main className={`mx-auto px-4 py-4 ${view === 'grid' ? 'max-w-7xl' : 'max-w-3xl'}`}>
         {livePoints && (
           <LiveBanner matchImpacts={livePoints.matchImpacts} isFetching={isFetching} />
@@ -124,6 +135,8 @@ function PoolApp() {
           All points computed live from API-Football · goals, assists, cards & keeper saves
         </p>
       </main>
+      )}
+      <BottomNav page={page} onNavigate={setPage} hasLive={hasLive} />
     </div>
   );
 }

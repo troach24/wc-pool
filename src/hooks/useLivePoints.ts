@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { WCEvent } from '../lib/api';
 import type { PickImpact } from '../lib/pointCalc';
+import type { WCEvent } from '../lib/api';
 import type { StandingsPayload } from '../lib/computeStandings';
 
 export type MatchImpact = {
@@ -14,6 +15,7 @@ export type LivePointsResult = {
   livePickLabels: Set<string>;
   liveMatchCount: number;
   todayMatchCount: number;
+  todayFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
   lastUpdated: Date;
   recentGoal?: { team: string; at: number };
@@ -35,6 +37,7 @@ export function useLivePoints() {
         livePickLabels: new Set(p.livePickLabels),
         liveMatchCount: p.liveMatchCount,
         todayMatchCount: p.todayMatchCount,
+        todayFixtures: p.todayFixtures,
         matchImpacts: p.matchImpacts,
         lastUpdated: new Date(p.lastUpdated),
         recentGoal: p.recentGoal,

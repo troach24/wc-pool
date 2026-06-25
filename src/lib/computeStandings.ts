@@ -59,6 +59,7 @@ export type StandingsPayload = {
   livePickLabels: string[];
   liveMatchCount: number;
   todayMatchCount: number;
+  todayFixtures: import('./api').WCEvent[];
   matchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
   lastUpdated: string;
   // The scoring team of the most recent goal, kept for ~10 min so freshly
@@ -222,6 +223,12 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     todayMatchCount: (() => {
       const today = new Date().toDateString();
       return fixtures.filter((m) => new Date(m.startTimestamp * 1000).toDateString() === today).length;
+    })(),
+    todayFixtures: (() => {
+      const today = new Date().toDateString();
+      return fixtures
+        .filter((m) => new Date(m.startTimestamp * 1000).toDateString() === today)
+        .sort((a, b) => a.startTimestamp - b.startTimestamp);
     })(),
     matchImpacts,
     lastUpdated: new Date().toISOString(),
