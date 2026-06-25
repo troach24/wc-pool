@@ -300,12 +300,29 @@ async function linesFor(event) {
   if (event.status.type === "finished") finishedLineCache.set(event.id, lines);
   return lines;
 }
+var GOAL_WINDOW_MS = 10 * 60 * 1e3;
+var prevScores = null;
+var recentGoal = null;
 async function computeStandings(entries2) {
   const standings = await fetchWCStandings();
   const fixtures = await fetchWCFixtures(groupLetterMap(standings));
   const played = fixtures.filter(
     (m) => m.status.type === "finished" || m.status.type === "inprogress"
   );
+  const curScores = /* @__PURE__ */ new Map();
+  for (const e of played) {
+    curScores.set(e.id, { h: e.homeScore.current, a: e.awayScore.current });
+  }
+  if (prevScores) {
+    for (const e of played) {
+      const before = prevScores.get(e.id);
+      const now = curScores.get(e.id);
+      if (!before) continue;
+      if (now.h > before.h) recentGoal = { team: e.homeTeam.name, at: Date.now() };
+      else if (now.a > before.a) recentGoal = { team: e.awayTeam.name, at: Date.now() };
+    }
+  }
+  prevScores = curScores;
   const lineResults = await mapWithConcurrency(played, 5, async (event) => ({
     event,
     lines: await linesFor(event)
@@ -364,13 +381,15 @@ async function computeStandings(entries2) {
       for (const imp of mi.impacts) livePickLabels.add(imp.label);
     }
   }
+  const freshGoal = recentGoal && Date.now() - recentGoal.at < GOAL_WINDOW_MS ? recentGoal : void 0;
   return {
     updatedPoints: [...updatedPoints],
     pickValues: [...pickValues],
     livePickLabels: [...livePickLabels],
     liveMatchCount: fixtures.filter((m) => m.status.type === "inprogress").length,
     matchImpacts,
-    lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
+    lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
+    recentGoal: freshGoal
   };
 }
 

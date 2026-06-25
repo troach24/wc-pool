@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { VerifiedBanner } from './components/VerifiedBanner';
@@ -22,27 +22,25 @@ function PoolApp() {
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
   );
 
-  // Fire the goal animation when any live match's score ticks up between polls,
-  // wearing the scoring team's kit.
-  const prevScores = useRef<Map<number, { h: number; a: number }> | null>(null);
+  // Celebrate the most recent goal (flagged server-side, kept ~10 min), but
+  // show it to each user at most once per 10 minutes — so freshly-loaded and
+  // returning users still catch it without spamming active watchers.
   const [goal, setGoal] = useState<{ key: number; kit: TeamKit } | null>(null);
   useEffect(() => {
-    if (!livePoints) return;
-    const cur = new Map<number, { h: number; a: number }>();
-    for (const mi of livePoints.matchImpacts) {
-      cur.set(mi.event.id, { h: mi.event.homeScore.current, a: mi.event.awayScore.current });
+    const recent = livePoints?.recentGoal;
+    if (!recent) return;
+    const COOLDOWN = 10 * 60 * 1000;
+    let last = 0;
+    try {
+      last = Number(localStorage.getItem('wc:lastCellyAt')) || 0;
+    } catch {
+      /* private mode — fall back to session only */
     }
-    const prev = prevScores.current;
-    if (prev) {
-      for (const mi of livePoints.matchImpacts) {
-        const before = prev.get(mi.event.id);
-        const now = cur.get(mi.event.id)!;
-        if (!before) continue;
-        if (now.h > before.h) { setGoal({ key: Date.now(), kit: teamKit(mi.event.homeTeam.name) }); break; }
-        if (now.a > before.a) { setGoal({ key: Date.now(), kit: teamKit(mi.event.awayTeam.name) }); break; }
-      }
-    }
-    prevScores.current = cur;
+    if (Date.now() - last < COOLDOWN) return;
+    try {
+      localStorage.setItem('wc:lastCellyAt', String(Date.now()));
+    } catch { /* ignore */ }
+    setGoal({ key: Date.now(), kit: teamKit(recent.team) });
   }, [livePoints]);
 
   // Dev-only: run `__goal('Brazil')` in the console to preview a team's kit.

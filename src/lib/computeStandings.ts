@@ -59,7 +59,16 @@ export type StandingsPayload = {
   liveMatchCount: number;
   matchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
   lastUpdated: string;
+  // The scoring team of the most recent goal, kept for ~10 min so freshly
+  // loaded clients can still celebrate it. Detected from score deltas between
+  // server recomputes — no extra API calls.
+  recentGoal?: { team: string; at: number };
 };
+
+// Module-scoped across warm serverless invocations.
+const GOAL_WINDOW_MS = 10 * 60 * 1000;
+let prevScores: Map<number, { h: number; a: number }> | null = null;
+let recentGoal: { team: string; at: number } | null = null;
 
 export async function computeStandings(entries: Entry[]): Promise<StandingsPayload> {
   const standings = await fetchWCStandings();
@@ -68,6 +77,23 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
   const played = fixtures.filter(
     (m) => m.status.type === 'finished' || m.status.type === 'inprogress'
   );
+
+  // Detect a fresh goal from score deltas vs the previous recompute.
+  const curScores = new Map<number, { h: number; a: number }>();
+  for (const e of played) {
+    curScores.set(e.id, { h: e.homeScore.current, a: e.awayScore.current });
+  }
+  if (prevScores) {
+    for (const e of played) {
+      const before = prevScores.get(e.id);
+      const now = curScores.get(e.id)!;
+      if (!before) continue;
+      if (now.h > before.h) recentGoal = { team: e.homeTeam.name, at: Date.now() };
+      else if (now.a > before.a) recentGoal = { team: e.awayTeam.name, at: Date.now() };
+    }
+  }
+  prevScores = curScores;
+
   // Throttle to avoid bursting past the per-minute rate limit on a cold start.
   // (Most calls are served from finishedLineCache on warm instances anyway.)
   const lineResults = await mapWithConcurrency(played, 5, async (event) => ({
@@ -142,6 +168,9 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     }
   }
 
+  const freshGoal =
+    recentGoal && Date.now() - recentGoal.at < GOAL_WINDOW_MS ? recentGoal : undefined;
+
   return {
     updatedPoints: [...updatedPoints],
     pickValues: [...pickValues],
@@ -149,5 +178,6 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     liveMatchCount: fixtures.filter((m) => m.status.type === 'inprogress').length,
     matchImpacts,
     lastUpdated: new Date().toISOString(),
+    recentGoal: freshGoal,
   };
 }

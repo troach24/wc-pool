@@ -15,6 +15,7 @@ export type LivePointsResult = {
   liveMatchCount: number;
   matchImpacts: MatchImpact[];
   lastUpdated: Date;
+  recentGoal?: { team: string; at: number };
 };
 
 // The client makes ONE request to our own cached endpoint — no direct calls to
@@ -34,6 +35,7 @@ export function useLivePoints() {
         liveMatchCount: p.liveMatchCount,
         matchImpacts: p.matchImpacts,
         lastUpdated: new Date(p.lastUpdated),
+        recentGoal: p.recentGoal,
       };
     },
     staleTime: 30_000,
