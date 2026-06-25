@@ -3,6 +3,7 @@ import type { MatchImpact } from '../hooks/useLivePoints';
 type Props = {
   matchImpacts: MatchImpact[];
   isFetching: boolean;
+  lastUpdated?: Date;
 };
 
 function statusLabel(desc: string, type: string): string {
@@ -12,7 +13,7 @@ function statusLabel(desc: string, type: string): string {
   return desc;
 }
 
-export function LiveBanner({ matchImpacts, isFetching }: Props) {
+export function LiveBanner({ matchImpacts, isFetching, lastUpdated }: Props) {
   if (!matchImpacts.length) return null;
 
   // Live matches first, then most recent kickoffs — capped at 4
@@ -42,9 +43,16 @@ export function LiveBanner({ matchImpacts, isFetching }: Props) {
             Latest results
           </span>
         )}
-        <span className="ml-auto flex items-center gap-1 text-[10px] text-white/25">
-          {isFetching && <span className="mr-1 text-white/30">syncing…</span>}
-          API-Football · FIFA verified
+        <span className="ml-auto flex items-center gap-1.5 text-[10px] text-white/25">
+          {isFetching ? (
+            <span className="text-white/40">syncing…</span>
+          ) : lastUpdated ? (
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+              {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          ) : null}
+          <span>· API-Football</span>
         </span>
       </div>
 
