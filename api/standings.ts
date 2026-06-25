@@ -5,12 +5,11 @@ import rawData from '../src/data/standings.json';
 
 const entries = (rawData as any[]).map(fromRaw);
 
-export const config = { runtime: 'nodejs' };
-
-export default async function handler(_req: Request): Promise<Response> {
+export default async function handler(_req: any, res: any) {
   const key = process.env.APIFOOTBALL_KEY;
   if (!key) {
-    return Response.json({ error: 'APIFOOTBALL_KEY not configured' }, { status: 500 });
+    res.status(500).json({ error: 'APIFOOTBALL_KEY not configured' });
+    return;
   }
   setApiKey(key);
 
@@ -23,14 +22,9 @@ export default async function handler(_req: Request): Promise<Response> {
     const sMaxAge = live ? 30 : 600;
     const swr = live ? 60 : 1200;
 
-    return new Response(JSON.stringify(payload), {
-      status: 200,
-      headers: {
-        'content-type': 'application/json',
-        'cache-control': `public, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`,
-      },
-    });
+    res.setHeader('Cache-Control', `public, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
+    res.status(200).json(payload);
   } catch (err: any) {
-    return Response.json({ error: String(err?.message ?? err) }, { status: 502 });
+    res.status(502).json({ error: String(err?.message ?? err) });
   }
 }
