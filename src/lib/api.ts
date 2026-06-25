@@ -1,16 +1,26 @@
+// This module is server-only (used by the /api/standings serverless function).
+// The key is injected at runtime from process.env — never bundled to the client.
 const BASE = 'https://v3.football.api-sports.io';
-const HEADERS = {
-  'x-apisports-key': import.meta.env.VITE_APIFOOTBALL_KEY,
-};
-
 const WC_LEAGUE_ID = 1;
 const WC_SEASON = 2026;
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { headers: HEADERS });
+let API_KEY = '';
+export function setApiKey(key: string) {
+  API_KEY = key;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function get<T>(path: string, attempt = 0): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { headers: { 'x-apisports-key': API_KEY } });
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
   const json = await res.json();
   if (json.errors && Object.keys(json.errors).length) {
+    // The per-minute cap returns a soft error — back off and retry briefly.
+    if (json.errors.rateLimit && attempt < 3) {
+      await sleep(2500 * (attempt + 1));
+      return get<T>(path, attempt + 1);
+    }
     throw new Error(`API error: ${JSON.stringify(json.errors)}`);
   }
   return json.response as T;

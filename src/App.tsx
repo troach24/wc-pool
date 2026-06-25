@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 const entries = (rawData as any[]).map(fromRaw);
 
 function PoolApp() {
-  const { data: livePoints, isFetching, isError } = useLivePoints(entries);
+  const { data: livePoints, isFetching, isError } = useLivePoints();
   const { dark, toggle } = useDarkMode();
   const [view, setView] = useState<'cards' | 'grid'>(
     () => window.innerWidth >= 768 ? 'grid' : 'cards'
@@ -27,7 +27,11 @@ function PoolApp() {
         {livePoints && (
           <LiveBanner matchImpacts={livePoints.matchImpacts} isFetching={isFetching} />
         )}
-        <VerifiedBanner lastUpdated={livePoints?.lastUpdated} isFetching={isFetching} />
+        <VerifiedBanner
+          lastUpdated={livePoints?.lastUpdated}
+          isFetching={isFetching}
+          liveCount={livePoints?.liveMatchCount ?? 0}
+        />
 
         {/* View toggle */}
         <div className="flex items-center gap-3 mb-3">
