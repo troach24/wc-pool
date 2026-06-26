@@ -26,35 +26,57 @@ export function GoalAnimation({ onDone, kit }: Props) {
     const colors = [
       kit.jersey, kit.shorts, kit.accent,
       '#f0a500', '#ffffff', '#ff3b3b', '#3bdfff', '#b8ff3b',
+      '#ff9500', '#ff45c8', '#aaff00', '#00ccff', '#BF0A30', '#002868',
     ];
 
-    const pieces = Array.from({ length: 160 }, (_, i) => {
-      // Two bursts: center and spread
-      const fromCenter = i < 80;
-      const angle = fromCenter
-        ? (Math.random() * Math.PI * 2)
-        : (Math.random() * Math.PI * 2);
-      const speed = fromCenter
-        ? Math.random() * 18 + 8
-        : Math.random() * 10 + 3;
-      const startX = fromCenter
-        ? canvas.width / 2 + (Math.random() - 0.5) * 80
-        : Math.random() * canvas.width;
-      const startY = fromCenter
-        ? canvas.height * 0.35
-        : -20;
+    // Three waves: center explosion, left cannon, right cannon, plus rain from above
+    const pieces = Array.from({ length: 380 }, (_, i) => {
+      let startX: number, startY: number, vx: number, vy: number;
+
+      if (i < 120) {
+        // Center burst — erupts from middle of screen
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 22 + 10;
+        startX = canvas.width / 2 + (Math.random() - 0.5) * 100;
+        startY = canvas.height * 0.38;
+        vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 3;
+        vy = Math.sin(angle) * speed - 6;
+      } else if (i < 200) {
+        // Left cannon — fires up and right from left edge
+        const angle = -(Math.random() * 0.7 + 0.1);
+        const speed = Math.random() * 20 + 12;
+        startX = canvas.width * (Math.random() * 0.15);
+        startY = canvas.height * (0.3 + Math.random() * 0.4);
+        vx = Math.cos(angle) * speed + Math.random() * 4;
+        vy = Math.sin(angle) * speed - Math.random() * 8;
+      } else if (i < 280) {
+        // Right cannon — fires up and left from right edge
+        const angle = -(Math.PI - Math.random() * 0.7 - 0.1);
+        const speed = Math.random() * 20 + 12;
+        startX = canvas.width * (0.85 + Math.random() * 0.15);
+        startY = canvas.height * (0.3 + Math.random() * 0.4);
+        vx = Math.cos(angle) * speed - Math.random() * 4;
+        vy = Math.sin(angle) * speed - Math.random() * 8;
+      } else {
+        // Rain — falls from top across full width
+        startX = Math.random() * canvas.width;
+        startY = -20 - Math.random() * 60;
+        vx = (Math.random() - 0.5) * 5;
+        vy = Math.random() * 4 + 2;
+      }
+
       return {
         x: startX,
         y: startY,
-        vx: Math.cos(angle) * speed * (fromCenter ? 1 : 0.4) + (Math.random() - 0.5) * 2,
-        vy: fromCenter ? Math.sin(angle) * speed - 4 : Math.random() * 5 + 2,
+        vx,
+        vy,
         rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 14,
-        w: Math.random() * 14 + 5,
-        h: Math.random() * 7 + 3,
+        rotationSpeed: (Math.random() - 0.5) * 18,
+        w: Math.random() * 16 + 5,
+        h: Math.random() * 8 + 3,
         color: colors[Math.floor(Math.random() * colors.length)],
         opacity: 1,
-        shape: Math.random() > 0.4 ? 'rect' : 'circle',
+        shape: (Math.random() > 0.35 ? 'rect' : Math.random() > 0.5 ? 'circle' : 'ribbon') as 'rect' | 'circle' | 'ribbon',
       };
     });
 
@@ -67,30 +89,33 @@ export function GoalAnimation({ onDone, kit }: Props) {
       last = now;
       elapsed += dt;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
       for (const p of pieces) {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.18;
-        p.vx *= 0.995;
+        p.vy += 0.22;
+        p.vx *= 0.993;
         p.rotation += p.rotationSpeed;
 
-        if (elapsed > 3.5) p.opacity = Math.max(0, p.opacity - dt * 0.8);
+        if (elapsed > 3.5) p.opacity = Math.max(0, p.opacity - dt * 0.7);
 
-        ctx.save();
-        ctx.globalAlpha = p.opacity;
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.fillStyle = p.color;
+        ctx!.save();
+        ctx!.globalAlpha = p.opacity;
+        ctx!.translate(p.x, p.y);
+        ctx!.rotate((p.rotation * Math.PI) / 180);
+        ctx!.fillStyle = p.color;
         if (p.shape === 'circle') {
-          ctx.beginPath();
-          ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
-          ctx.fill();
+          ctx!.beginPath();
+          ctx!.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+          ctx!.fill();
+        } else if (p.shape === 'ribbon') {
+          // Thin long ribbon strip
+          ctx!.fillRect(-p.w, -p.h / 4, p.w * 2, p.h / 2);
         } else {
-          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx!.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
         }
-        ctx.restore();
+        ctx!.restore();
       }
 
       if (elapsed < DURATION / 1000) frame = requestAnimationFrame(draw);
@@ -200,69 +225,81 @@ export function GoalAnimation({ onDone, kit }: Props) {
               </feTurbulence>
               <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G"/>
             </filter>
-            {/* Jersey gradient */}
-            <linearGradient id="jg" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={kit.jersey} stopOpacity="1"/>
-              <stop offset="100%" stopColor={kit.jersey} stopOpacity="0.8"/>
-            </linearGradient>
-            {/* Pit Viper mirrored lens gradient */}
-            <linearGradient id="pvg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%"   stopColor={kit.accent}/>
-              <stop offset="40%"  stopColor={kit.jersey}/>
-              <stop offset="70%"  stopColor={kit.accent}/>
-              <stop offset="100%" stopColor={kit.jersey}/>
+            {/* Hat stripe gradient */}
+            <linearGradient id="hatSheen" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="rgba(0,0,0,0.12)"/>
+              <stop offset="40%"  stopColor="rgba(255,255,255,0.08)"/>
+              <stop offset="100%" stopColor="rgba(0,0,0,0.10)"/>
             </linearGradient>
           </defs>
 
-          {/* ── LEGS hanging below crossbar ── */}
+          {/* ── LEGS hanging below crossbar — red & white striped pants ── */}
           {/* Left leg — swings one way */}
           <g style={{ transformOrigin: '148px 172px', animation: 'legSwing 1.5s ease-in-out 2.05s infinite alternate' }}>
-            {/* thigh */}
-            <path d="M140 172 Q138 192 136 208" stroke={kit.shorts} strokeWidth="16" strokeLinecap="round" fill="none"/>
-            {/* shin */}
-            <path d="M136 208 Q134 220 130 226" stroke="#f4c39a" strokeWidth="12" strokeLinecap="round" fill="none"/>
-            {/* boot */}
-            <ellipse cx="124" cy="229" rx="13" ry="7" fill="#1a1a2e" transform="rotate(-15 124 229)"/>
-            <rect x="114" y="223" width="18" height="10" rx="4" fill="#111" transform="rotate(-15 123 228)"/>
+            {/* pants — white base */}
+            <path d="M140 172 Q138 192 136 208" stroke="#f5f5ee" strokeWidth="16" strokeLinecap="round" fill="none"/>
+            {/* red stripes over pants */}
+            <path d="M140 172 Q139 179 138 186" stroke="#BF0A30" strokeWidth="6" strokeLinecap="round" fill="none"/>
+            <path d="M138 193 Q137 200 136 207" stroke="#BF0A30" strokeWidth="6" strokeLinecap="round" fill="none"/>
+            {/* sock/shin */}
+            <path d="M136 208 Q134 220 130 226" stroke="#f5f5ee" strokeWidth="12" strokeLinecap="round" fill="none"/>
+            {/* boot — tall black */}
+            <path d="M122 222 Q116 226 114 232 L138 232 L138 220 Z" fill="#111"/>
+            <ellipse cx="126" cy="232" rx="12" ry="5" fill="#0d0d0d"/>
           </g>
           {/* Right leg */}
           <g style={{ transformOrigin: '172px 172px', animation: 'legSwing 1.5s ease-in-out 2.05s infinite alternate-reverse' }}>
-            <path d="M180 172 Q182 192 184 208" stroke={kit.shorts} strokeWidth="16" strokeLinecap="round" fill="none"/>
-            <path d="M184 208 Q186 220 190 226" stroke="#f4c39a" strokeWidth="12" strokeLinecap="round" fill="none"/>
-            <ellipse cx="196" cy="229" rx="13" ry="7" fill="#1a1a2e" transform="rotate(15 196 229)"/>
-            <rect x="188" y="223" width="18" height="10" rx="4" fill="#111" transform="rotate(15 197 228)"/>
+            <path d="M180 172 Q182 192 184 208" stroke="#f5f5ee" strokeWidth="16" strokeLinecap="round" fill="none"/>
+            <path d="M180 172 Q181 179 182 186" stroke="#BF0A30" strokeWidth="6" strokeLinecap="round" fill="none"/>
+            <path d="M182 193 Q183 200 184 207" stroke="#BF0A30" strokeWidth="6" strokeLinecap="round" fill="none"/>
+            <path d="M184 208 Q186 220 190 226" stroke="#f5f5ee" strokeWidth="12" strokeLinecap="round" fill="none"/>
+            {/* boot */}
+            <path d="M198 222 Q204 226 206 232 L182 232 L182 220 Z" fill="#111"/>
+            <ellipse cx="194" cy="232" rx="12" ry="5" fill="#0d0d0d"/>
           </g>
 
-          {/* ── BODY ── */}
-          {/* Torso */}
-          <path d="M128 105 Q130 88 160 86 Q190 88 192 105 L188 165 Q160 172 132 165 Z"
-                fill="url(#jg)" stroke="rgba(0,0,0,0.18)" strokeWidth="1.5"/>
-          {/* Jersey collar V-neck */}
-          <path d="M148 88 L160 100 L172 88" fill="none" stroke={kit.accent} strokeWidth="3" strokeLinecap="round"/>
-          {/* Jersey number */}
-          <text x="160" y="140" textAnchor="middle" fontFamily="Oswald,sans-serif" fontSize="22" fontWeight="900" fill={inkOn(kit.jersey)} opacity="0.85">10</text>
-          {/* Sleeve accent stripes */}
-          <path d="M128 108 Q120 112 118 118" stroke={kit.accent} strokeWidth="8" strokeLinecap="round" fill="none"/>
-          <path d="M192 108 Q200 112 202 118" stroke={kit.accent} strokeWidth="8" strokeLinecap="round" fill="none"/>
+          {/* ── BODY — Uncle Sam blue coat ── */}
+          {/* Coat body */}
+          <path d="M126 108 Q128 88 160 86 Q192 88 194 108 L190 165 Q160 172 130 165 Z"
+                fill="#002868" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5"/>
+          {/* Coat lapels */}
+          <path d="M148 88 L152 110 L160 104 L168 110 L172 88" fill="#f5f5ee" stroke="rgba(0,0,0,0.15)" strokeWidth="1"/>
+          {/* Red/white cravat bow tie */}
+          <path d="M154 90 L160 97 L166 90 Q160 87 154 90Z" fill="#BF0A30"/>
+          <path d="M154 90 L160 94 L166 90 Q160 92 154 90Z" fill="#f5f5ee" opacity="0.5"/>
+          {/* Gold buttons down coat */}
+          <circle cx="160" cy="115" r="4" fill="#d4a820" stroke="#a08010" strokeWidth="1"/>
+          <circle cx="160" cy="130" r="4" fill="#d4a820" stroke="#a08010" strokeWidth="1"/>
+          <circle cx="160" cy="145" r="4" fill="#d4a820" stroke="#a08010" strokeWidth="1"/>
+          {/* Stars on chest */}
+          <text x="138" y="118" fill="#d4a820" fontSize="10" fontFamily="serif" opacity="0.9">★</text>
+          <text x="174" y="118" fill="#d4a820" fontSize="10" fontFamily="serif" opacity="0.9">★</text>
+          {/* Coat sleeve accents — red stripe */}
+          <path d="M126 110 Q118 115 116 122" stroke="#BF0A30" strokeWidth="8" strokeLinecap="round" fill="none"/>
+          <path d="M194 110 Q202 115 204 122" stroke="#BF0A30" strokeWidth="8" strokeLinecap="round" fill="none"/>
 
           {/* ── LEFT ARM — gripping crossbar ── */}
-          {/* upper arm */}
-          <path d="M132 110 Q118 122 112 132" stroke={kit.jersey} strokeWidth="18" strokeLinecap="round" fill="none"/>
-          {/* forearm */}
-          <path d="M112 132 Q104 140 100 148" stroke="#f4c39a" strokeWidth="14" strokeLinecap="round" fill="none"/>
-          {/* glove */}
-          <circle cx="98" cy="152" r="11" fill="#f0f0f0"/>
-          <path d="M89 148 Q90 142 96 140" stroke="#ddd" strokeWidth="3" strokeLinecap="round" fill="none"/>
-          <path d="M87 153 Q86 147 92 145" stroke="#ddd" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          {/* coat sleeve */}
+          <path d="M130 112 Q116 124 110 134" stroke="#002868" strokeWidth="18" strokeLinecap="round" fill="none"/>
+          {/* red cuff stripe */}
+          <path d="M110 134 Q106 138 104 142" stroke="#BF0A30" strokeWidth="18" strokeLinecap="round" fill="none"/>
+          {/* forearm/hand */}
+          <path d="M104 142 Q100 148 98 154" stroke="#e0b888" strokeWidth="14" strokeLinecap="round" fill="none"/>
+          {/* hand gripping bar */}
+          <ellipse cx="97" cy="158" rx="10" ry="8" fill="#d4a070"/>
+          <path d="M88 154 Q90 148 96 147" stroke="#b88050" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+          <path d="M87 159 Q87 153 93 152" stroke="#b88050" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
 
           {/* ── RIGHT ARM + FLAMETHROWER (animated sweep) ── */}
           <g className="ft-arm" style={{ transformOrigin: '188px 112px' }}>
-            {/* upper arm */}
-            <path d="M188 112 Q204 116 216 122" stroke={kit.jersey} strokeWidth="18" strokeLinecap="round" fill="none"/>
-            {/* forearm */}
-            <path d="M216 122 Q228 126 238 128" stroke="#f4c39a" strokeWidth="14" strokeLinecap="round" fill="none"/>
-            {/* glove gripping gun */}
-            <circle cx="244" cy="130" r="10" fill="#f0f0f0"/>
+            {/* coat sleeve */}
+            <path d="M190 112 Q206 116 218 122" stroke="#002868" strokeWidth="18" strokeLinecap="round" fill="none"/>
+            {/* red cuff stripe */}
+            <path d="M218 122 Q226 125 232 127" stroke="#BF0A30" strokeWidth="18" strokeLinecap="round" fill="none"/>
+            {/* forearm/hand */}
+            <path d="M232 127 Q238 128 244 130" stroke="#e0b888" strokeWidth="14" strokeLinecap="round" fill="none"/>
+            {/* hand gripping gun */}
+            <ellipse cx="248" cy="131" rx="10" ry="8" fill="#d4a070"/>
 
             {/* Flamethrower gun body */}
             <rect x="240" y="118" width="70" height="20" rx="6" fill="#1c1c1c"/>
@@ -298,48 +335,89 @@ export function GoalAnimation({ onDone, kit }: Props) {
             </g>
           </g>
 
-          {/* ── HEAD ── */}
-          {/* Neck */}
-          <rect x="153" y="72" width="14" height="18" rx="6" fill="#f4c39a"/>
-          {/* Head shape — slightly wide */}
-          <ellipse cx="160" cy="52" rx="32" ry="30" fill="#f7cda6"/>
-          {/* Hair — messy spikes */}
-          <path d="M128 46 Q130 20 148 16 Q152 28 156 30 Q158 14 160 12 Q162 14 164 30 Q168 28 172 16 Q190 20 192 46 Q180 36 160 36 Q140 36 128 46Z" fill="#241712"/>
-          {/* Eyebrows — raised/excited */}
-          <path d="M140 38 Q148 34 154 37" stroke="#241712" strokeWidth="3" strokeLinecap="round" fill="none"/>
-          <path d="M166 37 Q172 34 180 38" stroke="#241712" strokeWidth="3" strokeLinecap="round" fill="none"/>
-          {/* ── PIT VIPERS ── huge wraparound mirrored shades */}
-          {/* Left lens */}
-          <path d="M116 36 L155 34 L156 54 Q135 60 116 52 Z" fill="url(#pvg)" opacity="0.93"/>
-          {/* Right lens */}
-          <path d="M165 34 L204 36 L204 52 Q185 60 164 54 Z" fill="url(#pvg)" opacity="0.93"/>
-          {/* Frame outlines */}
-          <path d="M116 36 L155 34 L156 54 Q135 60 116 52 Z" fill="none" stroke="#111" strokeWidth="3" strokeLinejoin="round"/>
-          <path d="M165 34 L204 36 L204 52 Q185 60 164 54 Z" fill="none" stroke="#111" strokeWidth="3" strokeLinejoin="round"/>
-          {/* Bridge */}
-          <path d="M155 37 Q160 35 165 37" fill="none" stroke="#111" strokeWidth="3.5" strokeLinecap="round"/>
-          {/* Temple arms wrapping to ears */}
-          <path d="M116 44 Q112 46 128 51" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/>
-          <path d="M204 44 Q208 46 192 51" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/>
-          {/* Mirror sheens — two highlights per lens */}
-          <path d="M120 39 Q133 36 150 37" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-          <path d="M120 45 Q128 43 138 44" stroke="rgba(255,255,255,0.30)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-          <path d="M170 37 Q187 36 200 39" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-          <path d="M182 44 Q192 43 200 45" stroke="rgba(255,255,255,0.30)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-          {/* Nose */}
-          <path d="M157 54 Q160 58 163 54" stroke="#e0a07a" strokeWidth="2" fill="none" strokeLinecap="round"/>
-          {/* Big open grin with teeth */}
-          <path d="M142 62 Q160 76 178 62" fill="#cc3300" stroke="#241712" strokeWidth="1.5"/>
-          <path d="M142 62 Q160 66 178 62" fill="#fff"/>
-          {/* Dimples */}
-          <circle cx="138" cy="60" r="4" fill="#f0a080" opacity="0.45"/>
-          <circle cx="182" cy="60" r="4" fill="#f0a080" opacity="0.45"/>
-          {/* Ear left */}
-          <ellipse cx="128" cy="50" rx="6" ry="8" fill="#f4c39a"/>
-          <ellipse cx="129" cy="50" rx="3" ry="5" fill="#e0a07a"/>
-          {/* Ear right */}
-          <ellipse cx="192" cy="50" rx="6" ry="8" fill="#f4c39a"/>
-          <ellipse cx="191" cy="50" rx="3" ry="5" fill="#e0a07a"/>
+          {/* ── UNCLE SAM HEAD ── */}
+
+          {/* ── TOP HAT ── */}
+          {/* Cylinder — white base */}
+          <rect x="133" y="-72" width="54" height="96" rx="3" fill="#f5f5ee"/>
+          {/* Red stripes */}
+          <rect x="133" y="-72" width="54" height="16" rx="2" fill="#BF0A30"/>
+          <rect x="133" y="-40" width="54" height="16" fill="#BF0A30"/>
+          <rect x="133" y="-8"  width="54" height="14" fill="#BF0A30"/>
+          {/* Blue star band */}
+          <rect x="133" y="12"  width="54" height="12" rx="1" fill="#002868"/>
+          {/* Stars on band */}
+          <text x="136" y="22" fill="white" fontSize="9" fontFamily="serif" letterSpacing="4">★★★★★</text>
+          {/* Hat sheen overlay */}
+          <rect x="133" y="-72" width="54" height="96" rx="3" fill="url(#hatSheen)" opacity="0.6"/>
+          {/* Hat outline */}
+          <rect x="133" y="-72" width="54" height="96" rx="3" fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5"/>
+          {/* Crown top */}
+          <ellipse cx="160" cy="-72" rx="27" ry="5" fill="#eee" stroke="rgba(0,0,0,0.2)" strokeWidth="1"/>
+          {/* Brim */}
+          <ellipse cx="160" cy="24" rx="40" ry="7" fill="#f0f0e8" stroke="rgba(0,0,0,0.2)" strokeWidth="1.5"/>
+          {/* Brim underside shadow */}
+          <ellipse cx="160" cy="25" rx="38" ry="5" fill="rgba(0,0,0,0.08)"/>
+
+          {/* White sideburns/hair under brim */}
+          <path d="M133 26 Q130 34 132 48" stroke="#e8e8e0" strokeWidth="10" strokeLinecap="round" fill="none"/>
+          <path d="M187 26 Q190 34 188 48" stroke="#e8e8e0" strokeWidth="10" strokeLinecap="round" fill="none"/>
+          {/* Sideburn detail */}
+          <path d="M133 28 Q131 36 133 46" stroke="rgba(200,200,190,0.6)" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          <path d="M187 28 Q189 36 187 46" stroke="rgba(200,200,190,0.6)" strokeWidth="3" strokeLinecap="round" fill="none"/>
+
+          {/* Neck — lean */}
+          <path d="M153 68 L152 88 Q160 92 168 88 L167 68 Q163 72 157 72 Z" fill="#e0b888"/>
+
+          {/* Head — long angular face */}
+          <path d="M140 58 L139 32 Q141 18 160 16 Q179 18 181 32 L180 58 Q175 70 160 72 Q145 70 140 58Z" fill="#edd5a0"/>
+          {/* Temple/jaw shadow */}
+          <path d="M140 44 Q139 56 142 64" stroke="rgba(0,0,0,0.10)" strokeWidth="4" strokeLinecap="round" fill="none"/>
+          <path d="M180 44 Q181 56 178 64" stroke="rgba(0,0,0,0.10)" strokeWidth="4" strokeLinecap="round" fill="none"/>
+
+          {/* Ears */}
+          <ellipse cx="139" cy="44" rx="5" ry="7" fill="#e0b888"/>
+          <ellipse cx="140" cy="44" rx="2.5" ry="4.5" fill="#c09060"/>
+          <ellipse cx="181" cy="44" rx="5" ry="7" fill="#e0b888"/>
+          <ellipse cx="180" cy="44" rx="2.5" ry="4.5" fill="#c09060"/>
+
+          {/* White bushy eyebrows */}
+          <path d="M140 30 Q150 24 158 28" stroke="#e8e8e0" strokeWidth="5.5" strokeLinecap="round" fill="none"/>
+          <path d="M162 28 Q170 24 180 30" stroke="#e8e8e0" strokeWidth="5.5" strokeLinecap="round" fill="none"/>
+          {/* Eyebrow shadow edge */}
+          <path d="M140 31 Q150 25 158 29" stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+          <path d="M162 29 Q170 25 180 31" stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+
+          {/* Eyes — stern, sharp */}
+          <ellipse cx="150" cy="37" rx="6.5" ry="5" fill="white"/>
+          <ellipse cx="170" cy="37" rx="6.5" ry="5" fill="white"/>
+          <circle cx="151" cy="38" r="4" fill="#3a2810"/>
+          <circle cx="171" cy="38" r="4" fill="#3a2810"/>
+          <circle cx="152" cy="37" r="2" fill="#0d0806"/>
+          <circle cx="172" cy="37" r="2" fill="#0d0806"/>
+          <circle cx="153" cy="36" r="1" fill="white" opacity="0.9"/>
+          <circle cx="173" cy="36" r="1" fill="white" opacity="0.9"/>
+          {/* Eye shadow crease */}
+          <path d="M143 33 Q150 31 157 33" stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+          <path d="M163 33 Q170 31 177 33" stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+
+          {/* Nose — long, angular */}
+          <path d="M158 44 L156 56 Q160 59 164 56 L162 44" stroke="#c09060" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+
+          {/* White mustache */}
+          <path d="M148 57 Q154 53 160 55 Q166 53 172 57 Q166 60 160 58 Q154 60 148 57Z" fill="#e8e8e0"/>
+          {/* Mustache shadow */}
+          <path d="M150 57 Q160 54 170 57" stroke="rgba(180,180,170,0.5)" strokeWidth="1.5" fill="none"/>
+
+          {/* Stern thin mouth */}
+          <path d="M152 62 Q160 65 168 62" fill="none" stroke="#90604a" strokeWidth="2" strokeLinecap="round"/>
+
+          {/* Pointed white goatee */}
+          <path d="M150 64 Q160 66 170 64 L167 76 Q163 88 160 93 Q157 88 153 76 Z" fill="#e8e8e0"/>
+          {/* Goatee shading */}
+          <path d="M158 66 Q160 78 160 91" stroke="rgba(180,180,170,0.5)" strokeWidth="2" fill="none"/>
+          <path d="M154 66 Q152 74 154 80" stroke="rgba(180,180,170,0.4)" strokeWidth="1.5" fill="none"/>
+          <path d="M166 66 Q168 74 166 80" stroke="rgba(180,180,170,0.4)" strokeWidth="1.5" fill="none"/>
         </svg>
       </div>
 
