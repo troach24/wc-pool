@@ -24,6 +24,7 @@ export type LivePointsResult = {
   lastUpdated: Date;
   goalSeq: number;
   goalTeam?: string;
+  goalAt?: string;
 };
 
 // The client makes ONE request to our own cached endpoint — no direct calls to
@@ -51,6 +52,7 @@ export function useLivePoints() {
         lastUpdated: new Date(p.lastUpdated),
         goalSeq: p.goalSeq,
         goalTeam: p.goalTeam,
+        goalAt: p.goalAt,
       };
     },
     staleTime: 30_000,

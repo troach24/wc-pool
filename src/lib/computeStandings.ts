@@ -76,6 +76,7 @@ export type StandingsPayload = {
   // any increase, so every goal triggers every user regardless of timing.
   goalSeq: number;
   goalTeam?: string;
+  goalAt?: string;
 };
 
 function makeSupabase() {
@@ -85,21 +86,22 @@ function makeSupabase() {
   return createClient(url, key);
 }
 
-async function readGoalState(): Promise<{ goalSeq: number; goalTeam?: string; prevScores: Record<string, { h: number; a: number }> }> {
+async function readGoalState(): Promise<{ goalSeq: number; goalTeam?: string; goalAt?: string; prevScores: Record<string, { h: number; a: number }> }> {
   const sb = makeSupabase();
   if (!sb) return { goalSeq: 0, prevScores: {} };
   const { data } = await sb.from('goal_state').select('*').eq('id', 1).single();
   return {
     goalSeq: data?.goal_seq ?? 0,
     goalTeam: data?.goal_team ?? undefined,
+    goalAt: data?.goal_at ?? undefined,
     prevScores: data?.prev_scores ?? {},
   };
 }
 
-async function writeGoalState(goalSeq: number, goalTeam: string | undefined, prevScores: Record<string, { h: number; a: number }>) {
+async function writeGoalState(goalSeq: number, goalTeam: string | undefined, goalAt: string | undefined, prevScores: Record<string, { h: number; a: number }>) {
   const sb = makeSupabase();
   if (!sb) return;
-  await sb.from('goal_state').update({ goal_seq: goalSeq, goal_team: goalTeam ?? null, prev_scores: prevScores }).eq('id', 1);
+  await sb.from('goal_state').update({ goal_seq: goalSeq, goal_team: goalTeam ?? null, goal_at: goalAt ?? null, prev_scores: prevScores }).eq('id', 1);
 }
 
 // One-off commissioner exceptions: pick label → fixture IDs that must NOT count
@@ -143,7 +145,7 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
   // Detect goals by diffing current scores against the last known state in Supabase.
   // Using a persistent store means cold-start serverless instances don't lose the counter.
   const goalState = await readGoalState();
-  let { goalSeq, goalTeam } = goalState;
+  let { goalSeq, goalTeam, goalAt } = goalState;
   const curScores: Record<string, { h: number; a: number }> = {};
   for (const e of played) {
     curScores[e.id] = { h: e.homeScore.current, a: e.awayScore.current };
@@ -152,10 +154,10 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     const before = goalState.prevScores[e.id];
     const now = curScores[e.id];
     if (!before || !now) continue;
-    if (now.h > before.h) { goalSeq++; goalTeam = e.homeTeam.name; }
-    else if (now.a > before.a) { goalSeq++; goalTeam = e.awayTeam.name; }
+    if (now.h > before.h) { goalSeq++; goalTeam = e.homeTeam.name; goalAt = new Date().toISOString(); }
+    else if (now.a > before.a) { goalSeq++; goalTeam = e.awayTeam.name; goalAt = new Date().toISOString(); }
   }
-  await writeGoalState(goalSeq, goalTeam, curScores);
+  await writeGoalState(goalSeq, goalTeam, goalAt, curScores);
 
   // Throttle to avoid bursting past the per-minute rate limit on a cold start.
   // (Most calls are served from finishedLineCache on warm instances anyway.)
@@ -267,5 +269,6 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     lastUpdated: new Date().toISOString(),
     goalSeq,
     goalTeam,
+    goalAt,
   };
 }

@@ -31,15 +31,17 @@ function PoolApp() {
 
   // Fire the goal animation when client-side score diffing detects a new goal.
   // lastCelebrated is a session ref — resets on page load so no stale replays.
+  const GOAL_WINDOW_MS = 10 * 60 * 1000; // show animation if goal scored within last 10 min
   const lastCelebrated = useRef(0);
   const [goal, setGoal] = useState<{ key: number; kit: TeamKit } | null>(null);
   useEffect(() => {
     if (!livePoints) return;
-    const seq = livePoints.goalSeq;
+    const { goalSeq: seq, goalTeam, goalAt } = livePoints;
     if (seq === 0 || seq <= lastCelebrated.current) return;
+    const fresh = goalAt ? (Date.now() - new Date(goalAt).getTime()) < GOAL_WINDOW_MS : false;
     lastCelebrated.current = seq;
-    if (livePoints.goalTeam) {
-      setGoal({ key: Date.now(), kit: teamKit(livePoints.goalTeam) });
+    if (goalTeam && fresh) {
+      setGoal({ key: Date.now(), kit: teamKit(goalTeam) });
     }
   }, [livePoints]);
 
