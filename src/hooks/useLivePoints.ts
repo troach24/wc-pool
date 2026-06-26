@@ -3,31 +3,6 @@ import type { WCEvent } from '../lib/api';
 import type { PickImpact } from '../lib/pointCalc';
 import type { StandingsPayload } from '../lib/computeStandings';
 
-// Client-side goal detection: diff scores between fetches so cold-start
-// serverless resets don't swallow goals.
-let clientPrevScores: Map<number, { h: number; a: number }> | null = null;
-let clientGoalSeq = 0;
-let clientGoalTeam: string | undefined;
-
-function detectGoals(fixtures: WCEvent[]): { goalSeq: number; goalTeam?: string } {
-  const cur = new Map<number, { h: number; a: number }>();
-  for (const f of fixtures) {
-    if (f.status.type === 'inprogress' || f.status.type === 'finished') {
-      cur.set(f.id, { h: f.homeScore.current, a: f.awayScore.current });
-    }
-  }
-  if (clientPrevScores) {
-    for (const f of fixtures) {
-      const before = clientPrevScores.get(f.id);
-      const now = cur.get(f.id);
-      if (!before || !now) continue;
-      if (now.h > before.h) { clientGoalSeq++; clientGoalTeam = f.homeTeam.name; }
-      else if (now.a > before.a) { clientGoalSeq++; clientGoalTeam = f.awayTeam.name; }
-    }
-  }
-  clientPrevScores = cur;
-  return { goalSeq: clientGoalSeq, goalTeam: clientGoalTeam };
-}
 
 export type MatchImpact = {
   event: WCEvent;
@@ -61,7 +36,6 @@ export function useLivePoints() {
       const res = await fetch('/api/standings');
       if (!res.ok) throw new Error(`standings ${res.status}`);
       const p: StandingsPayload = await res.json();
-      const { goalSeq, goalTeam } = detectGoals(p.allFixtures);
       return {
         updatedPoints: new Map(p.updatedPoints),
         pickValues: new Map(p.pickValues),
@@ -75,8 +49,8 @@ export function useLivePoints() {
         pickGroupBonus: new Map(p.pickGroupBonus),
         pickExcludedFixtures: new Map(p.pickExcludedFixtures),
         lastUpdated: new Date(p.lastUpdated),
-        goalSeq,
-        goalTeam,
+        goalSeq: p.goalSeq,
+        goalTeam: p.goalTeam,
       };
     },
     staleTime: 30_000,

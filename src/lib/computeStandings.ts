@@ -1,6 +1,7 @@
 // Server-side orchestration: fetch from API-Football + compute the full
 // standings payload. Runs inside the /api/standings serverless function so the
 // work (and the API key) is shared across all visitors via the edge cache.
+import { createClient } from '@supabase/supabase-js';
 import {
   fetchWCStandings,
   fetchWCFixtures,
@@ -77,12 +78,29 @@ export type StandingsPayload = {
   goalTeam?: string;
 };
 
-// Module-scoped — survives warm invocations but resets on cold starts.
-// Goal detection has moved client-side (score deltas in useLivePoints)
-// so these are kept only as fallback stubs.
-let prevScores: Map<number, { h: number; a: number }> | null = null;
-let goalSeq = 0;
-let goalTeam: string | undefined;
+function makeSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+async function readGoalState(): Promise<{ goalSeq: number; goalTeam?: string; prevScores: Record<string, { h: number; a: number }> }> {
+  const sb = makeSupabase();
+  if (!sb) return { goalSeq: 0, prevScores: {} };
+  const { data } = await sb.from('goal_state').select('*').eq('id', 1).single();
+  return {
+    goalSeq: data?.goal_seq ?? 0,
+    goalTeam: data?.goal_team ?? undefined,
+    prevScores: data?.prev_scores ?? {},
+  };
+}
+
+async function writeGoalState(goalSeq: number, goalTeam: string | undefined, prevScores: Record<string, { h: number; a: number }>) {
+  const sb = makeSupabase();
+  if (!sb) return;
+  await sb.from('goal_state').update({ goal_seq: goalSeq, goal_team: goalTeam ?? null, prev_scores: prevScores }).eq('id', 1);
+}
 
 // One-off commissioner exceptions: pick label → fixture IDs that must NOT count
 // toward that pick. The commissioner approved a mid-tournament player swap, so
@@ -122,21 +140,22 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     (m) => m.status.type === 'finished' || m.status.type === 'inprogress'
   );
 
-  // Detect a fresh goal from score deltas vs the previous recompute.
-  const curScores = new Map<number, { h: number; a: number }>();
+  // Detect goals by diffing current scores against the last known state in Supabase.
+  // Using a persistent store means cold-start serverless instances don't lose the counter.
+  const goalState = await readGoalState();
+  let { goalSeq, goalTeam } = goalState;
+  const curScores: Record<string, { h: number; a: number }> = {};
   for (const e of played) {
-    curScores.set(e.id, { h: e.homeScore.current, a: e.awayScore.current });
+    curScores[e.id] = { h: e.homeScore.current, a: e.awayScore.current };
   }
-  if (prevScores) {
-    for (const e of played) {
-      const before = prevScores.get(e.id);
-      const now = curScores.get(e.id)!;
-      if (!before) continue;
-      if (now.h > before.h) { goalSeq++; goalTeam = e.homeTeam.name; }
-      else if (now.a > before.a) { goalSeq++; goalTeam = e.awayTeam.name; }
-    }
+  for (const e of played) {
+    const before = goalState.prevScores[e.id];
+    const now = curScores[e.id];
+    if (!before || !now) continue;
+    if (now.h > before.h) { goalSeq++; goalTeam = e.homeTeam.name; }
+    else if (now.a > before.a) { goalSeq++; goalTeam = e.awayTeam.name; }
   }
-  prevScores = curScores;
+  await writeGoalState(goalSeq, goalTeam, curScores);
 
   // Throttle to avoid bursting past the per-minute rate limit on a cold start.
   // (Most calls are served from finishedLineCache on warm instances anyway.)
