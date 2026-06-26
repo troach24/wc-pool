@@ -190,6 +190,16 @@ export function GoalAnimation({ onDone, kit }: Props) {
       <div className="goal-burst goal-burst-2" />
       <div className="goal-burst goal-burst-3" />
 
+      <div className="goal-flames">
+        <div className="flame flame-1" />
+        <div className="flame flame-2" />
+        <div className="flame flame-3" />
+        <div className="flame flame-4" />
+        <div className="flame flame-5" />
+        <div className="flame flame-6" />
+        <div className="flame flame-7" />
+      </div>
+
       <div className="goal-text">GOAL!</div>
     </div>
   );
@@ -270,6 +280,45 @@ const CSS = `
   0% { transform: scale(1); }
   45% { transform: scale(1.06) translateY(2px); }
   100% { transform: scale(1); }
+}
+.goal-flames {
+  position: absolute;
+  bottom: calc(50% + 6vmin);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44vmin;
+  height: 24vmin;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.6vmin;
+  opacity: 0;
+  transform-origin: bottom center;
+  animation: flamesIn 0.5s cubic-bezier(0.2,1.2,0.4,1) 1.6s forwards;
+}
+.flame {
+  border-radius: 50% 50% 28% 28% / 80% 80% 20% 20%;
+  transform-origin: bottom center;
+  flex-shrink: 0;
+}
+.flame-1 { width: 4vmin;  height: 10vmin; background: linear-gradient(to top, #e62000, #ff5500, #ffb300, #fff5aa); animation: flicker 0.38s ease-in-out 1.6s infinite alternate; }
+.flame-2 { width: 5.5vmin; height: 15vmin; background: linear-gradient(to top, #e62000, #ff4500, #ffa200, #fff5aa); animation: flicker 0.31s ease-in-out 1.65s infinite alternate-reverse; }
+.flame-3 { width: 7vmin;  height: 20vmin; background: linear-gradient(to top, #cc1a00, #ff3800, #ff9000, #ffe97a); animation: flickerBig 0.42s ease-in-out 1.58s infinite alternate; }
+.flame-4 { width: 8vmin;  height: 24vmin; background: linear-gradient(to top, #bb1500, #ff2e00, #ff8000, #ffe060); animation: flickerBig 0.36s ease-in-out 1.62s infinite alternate-reverse; }
+.flame-5 { width: 8vmin;  height: 24vmin; background: linear-gradient(to top, #bb1500, #ff2e00, #ff8000, #ffe060); animation: flickerBig 0.44s ease-in-out 1.55s infinite alternate; }
+.flame-6 { width: 5.5vmin; height: 15vmin; background: linear-gradient(to top, #e62000, #ff4500, #ffa200, #fff5aa); animation: flicker 0.33s ease-in-out 1.68s infinite alternate; }
+.flame-7 { width: 4vmin;  height: 10vmin; background: linear-gradient(to top, #e62000, #ff5500, #ffb300, #fff5aa); animation: flicker 0.40s ease-in-out 1.63s infinite alternate-reverse; }
+@keyframes flamesIn {
+  from { opacity: 0; transform: translateX(-50%) scaleY(0.2); }
+  to   { opacity: 1; transform: translateX(-50%) scaleY(1); }
+}
+@keyframes flicker {
+  from { transform: scaleX(1)    scaleY(1)    rotate(-4deg); opacity: 0.95; }
+  to   { transform: scaleX(0.82) scaleY(0.88) rotate(4deg);  opacity: 0.80; }
+}
+@keyframes flickerBig {
+  from { transform: scaleX(1)    scaleY(1)    rotate(-2deg); opacity: 1; }
+  to   { transform: scaleX(0.88) scaleY(0.93) rotate(2deg);  opacity: 0.85; }
 }
 @keyframes goalPop {
   0%   { opacity: 0; transform: scale(0.3) translateY(12px); }
