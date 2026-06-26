@@ -100,7 +100,7 @@ export function PickBreakdownModal({
 
   const rows = allFixtures
     .filter((f) => {
-      if (f.status.type !== 'finished') return false;
+      if (f.status.type !== 'finished' && f.status.type !== 'inprogress') return false;
       if (isTeam) return f.homeTeam.name === teamName || f.awayTeam.name === teamName;
       return (pointsByFixture.get(f.id) ?? 0) > 0;
     })
