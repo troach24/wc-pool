@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { VerifiedBanner } from './components/VerifiedBanner';
@@ -29,18 +29,15 @@ function PoolApp() {
   const [page, setPage] = useState<'standings' | 'schedule' | 'chat'>('standings');
   const [unreadChat, setUnreadChat] = useState(false);
 
-  // Fire the goal animation whenever the server's goalSeq counter increases.
-  // Each increment = one new goal detected. The client stores the last seq it
-  // celebrated so every goal triggers every user exactly once.
+  // Fire the goal animation when client-side score diffing detects a new goal.
+  // lastCelebrated is a session ref — resets on page load so no stale replays.
+  const lastCelebrated = useRef(0);
   const [goal, setGoal] = useState<{ key: number; kit: TeamKit } | null>(null);
   useEffect(() => {
     if (!livePoints) return;
     const seq = livePoints.goalSeq;
-    if (seq === 0) return;
-    let lastSeq = 0;
-    try { lastSeq = Number(localStorage.getItem('wc:lastGoalSeq')) || 0; } catch { /* ignore */ }
-    if (seq <= lastSeq) return;
-    try { localStorage.setItem('wc:lastGoalSeq', String(seq)); } catch { /* ignore */ }
+    if (seq === 0 || seq <= lastCelebrated.current) return;
+    lastCelebrated.current = seq;
     if (livePoints.goalTeam) {
       setGoal({ key: Date.now(), kit: teamKit(livePoints.goalTeam) });
     }
