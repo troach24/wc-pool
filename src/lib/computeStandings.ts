@@ -77,7 +77,9 @@ export type StandingsPayload = {
   goalTeam?: string;
 };
 
-// Module-scoped across warm serverless invocations.
+// Module-scoped — survives warm invocations but resets on cold starts.
+// Goal detection has moved client-side (score deltas in useLivePoints)
+// so these are kept only as fallback stubs.
 let prevScores: Map<number, { h: number; a: number }> | null = null;
 let goalSeq = 0;
 let goalTeam: string | undefined;
