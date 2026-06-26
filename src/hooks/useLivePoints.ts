@@ -17,6 +17,8 @@ export type LivePointsResult = {
   allFixtures: WCEvent[];
   matchImpacts: MatchImpact[];
   allMatchImpacts: MatchImpact[];
+  pickToTeam: Map<string, string>;
+  pickGroupBonus: Map<string, number>;
   lastUpdated: Date;
   goalSeq: number;
   goalTeam?: string;
@@ -41,6 +43,8 @@ export function useLivePoints() {
         allFixtures: p.allFixtures,
         matchImpacts: p.matchImpacts,
         allMatchImpacts: p.allMatchImpacts,
+        pickToTeam: new Map(p.pickToTeam),
+        pickGroupBonus: new Map(p.pickGroupBonus),
         lastUpdated: new Date(p.lastUpdated),
         goalSeq: p.goalSeq,
         goalTeam: p.goalTeam,

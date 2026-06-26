@@ -61,6 +61,7 @@ export type StandingRow = {
   team: { name: string; id: number };
   position: number;
   wins: number;
+  draws: number;
   scoresFor: number;
   scoresAgainst: number;
   matches: number;
@@ -142,7 +143,7 @@ export async function fetchWCStandings(): Promise<StandingRow[]> {
           rank: number;
           group: string;
           team: { id: number; name: string };
-          all: { played: number; win: number; goals: { for: number; against: number } };
+          all: { played: number; win: number; draw: number; goals: { for: number; against: number } };
         }>
       >;
     };
@@ -154,6 +155,7 @@ export async function fetchWCStandings(): Promise<StandingRow[]> {
       team: { name: r.team.name, id: r.team.id },
       position: r.rank,
       wins: r.all.win,
+      draws: r.all.draw,
       scoresFor: r.all.goals.for,
       scoresAgainst: r.all.goals.against,
       matches: r.all.played,

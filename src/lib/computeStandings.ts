@@ -63,6 +63,10 @@ export type StandingsPayload = {
   allFixtures: import('./api').WCEvent[];
   matchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
   allMatchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
+  // pick label → API team name, so the client can filter fixtures to that team's games.
+  pickToTeam: [string, string][];
+  // pick label → group position bonus (8/4/2), only present when earned.
+  pickGroupBonus: [string, number][];
   lastUpdated: string;
   // Monotonically increasing counter — increments once per detected goal.
   // Clients store the last value they celebrated and fire the animation on
@@ -153,31 +157,44 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
   for (const [teamName, ts] of stats.teams) {
     teamPointsRaw.set(teamName, computeTeamPointsFromStats(ts));
   }
-  const teamPoints = applyGroupBonuses(teamPointsRaw, standings);
+  const { points: teamPoints, bonuses: teamGroupBonuses } = applyGroupBonuses(teamPointsRaw, standings, fixtures);
 
   const teamOf = (n: string) => stats.playerTeam.get(n);
   const pickValues = new Map<string, number>();
+  const pickToTeam = new Map<string, string>();
+  const pickGroupBonus = new Map<string, number>();
   for (const label of teamLabels) {
     const m = findTeamByCountry(label, teamPoints.keys());
-    if (m) pickValues.set(label, teamPoints.get(m) ?? 0);
+    if (m) {
+      pickValues.set(label, teamPoints.get(m) ?? 0);
+      pickToTeam.set(label, m);
+      const bonus = teamGroupBonuses.get(m);
+      if (bonus) pickGroupBonus.set(label, bonus);
+    }
   }
   for (const label of playerLabels) {
     const excl = PICK_MATCH_EXCLUSIONS[label];
     if (excl) {
       pickValues.set(label, pickValueExcluding(lineResults, label, 'player', new Set(excl)));
-      continue;
+    } else {
+      const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
+      if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
     }
-    const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
-    if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
+    const m2 = findPlayerByCountry(label, stats.players.keys(), teamOf);
+    const team = m2 ? teamOf(m2) : undefined;
+    if (team) pickToTeam.set(label, team);
   }
   for (const label of keeperLabels) {
     const excl = PICK_MATCH_EXCLUSIONS[label];
     if (excl) {
       pickValues.set(label, pickValueExcluding(lineResults, label, 'keeper', new Set(excl)));
-      continue;
+    } else {
+      const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
+      if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
     }
-    const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
-    if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
+    const m2 = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
+    const team = m2 ? teamOf(m2) : undefined;
+    if (team) pickToTeam.set(label, team);
   }
 
   const allImpacts = lineResults.map(({ event, lines }) => {
@@ -227,6 +244,8 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     allFixtures: [...fixtures].sort((a, b) => a.startTimestamp - b.startTimestamp),
     matchImpacts,
     allMatchImpacts: allImpacts,
+    pickToTeam: [...pickToTeam],
+    pickGroupBonus: [...pickGroupBonus],
     lastUpdated: new Date().toISOString(),
     goalSeq,
     goalTeam,

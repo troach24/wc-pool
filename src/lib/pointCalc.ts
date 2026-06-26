@@ -1,4 +1,73 @@
 import type { PlayerLine, StandingRow, WCEvent } from './api';
+
+// FIFA points (W=3, D=1) for a standings row — used to assess group security.
+function fifaPts(row: StandingRow): number {
+  return row.wins * 3 + row.draws;
+}
+
+// Max FIFA points a team can reach (assuming they win every remaining game).
+function maxFifaPts(row: StandingRow): number {
+  return fifaPts(row) + (3 - row.matches) * 3;
+}
+
+// Result of the finished H2H group fixture between two teams (group stage only).
+// Returns 'win' if teamId beat opponentId, 'loss', 'draw', or 'not_played'.
+function h2hResult(
+  teamId: number,
+  opponentId: number,
+  fixtures: WCEvent[]
+): 'win' | 'loss' | 'draw' | 'not_played' {
+  const f = fixtures.find(
+    (x) =>
+      x.status.type === 'finished' &&
+      x.round.toLowerCase().includes('group') &&
+      ((x.homeTeam.id === teamId && x.awayTeam.id === opponentId) ||
+        (x.homeTeam.id === opponentId && x.awayTeam.id === teamId))
+  );
+  if (!f) return 'not_played';
+  const h = f.homeScore.current;
+  const a = f.awayScore.current;
+  if (h === a) return 'draw';
+  const isHome = f.homeTeam.id === teamId;
+  return (isHome ? h > a : a > h) ? 'win' : 'loss';
+}
+
+// Whether a team's group position (1, 2, or 3) is mathematically secured.
+// A position P is secured when at most (P-1) other teams in the group can
+// possibly finish ranked above this team, accounting for:
+//   1. Points: can another team exceed this team's current FIFA points?
+//   2. Head-to-head (2026 WC tiebreaker): for teams that can only tie on points,
+//      did this team beat them? If yes, they lose the H2H tiebreaker.
+// Ignores overall GD tiebreaker (only falls back to H2H for pure-points ties).
+function isPositionSecured(
+  row: StandingRow,
+  groupRows: StandingRow[],
+  fixtures: WCEvent[],
+  targetPosition: number
+): boolean {
+  const myPts = fifaPts(row);
+  const others = groupRows.filter((r) => r.team.id !== row.team.id);
+
+  let canRankAbove = 0;
+  for (const other of others) {
+    const theirMax = maxFifaPts(other);
+    if (theirMax > myPts) {
+      // They can get more points → can rank above us
+      canRankAbove++;
+    } else if (theirMax === myPts) {
+      // They can tie us → tiebreaker decides. Check H2H.
+      const result = h2hResult(row.team.id, other.team.id, fixtures);
+      if (result !== 'win') {
+        // We didn't beat them in H2H (lost, drew, or haven't played) → they
+        // could rank above us via tiebreaker.
+        canRankAbove++;
+      }
+    }
+    // If theirMax < myPts they can never catch us — no increment.
+  }
+
+  return canRankAbove < targetPosition;
+}
 import { PLAYER_POINTS, TEAM_POINTS, KEEPER_POINTS } from './scoring';
 import { matchesApiName, stripFlag } from './nameMap';
 import { countryOfFlag, teamKey } from './teamCountry';
@@ -163,28 +232,45 @@ export function computeTeamPointsFromStats(stats: TeamStats): number {
   );
 }
 
-// Apply group position bonuses from standings (only once all 3 group games played)
+// Apply group position bonuses when a position is mathematically secured or final.
+// Returns updated points map and a separate teamName → bonus map for transparency.
 export function applyGroupBonuses(
   teamPoints: Map<string, number>,
-  standings: StandingRow[]
-): Map<string, number> {
-  const result = new Map(teamPoints);
+  standings: StandingRow[],
+  fixtures: WCEvent[]
+): { points: Map<string, number>; bonuses: Map<string, number> } {
+  const points = new Map(teamPoints);
+  const bonuses = new Map<string, number>();
+
+  // Group standings rows by group letter so we can reason about each group.
+  const byGroup = new Map<string, StandingRow[]>();
+  for (const row of standings) {
+    const g = row.group ?? '';
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g)!.push(row);
+  }
 
   for (const row of standings) {
     const name = row.team.name;
-    const existing = result.get(name) ?? 0;
+    const groupRows = byGroup.get(row.group ?? '') ?? [row];
+
+    const final = row.matches >= 3;
+    const pos1 = final || isPositionSecured(row, groupRows, fixtures, 1);
+    const pos2 = final || isPositionSecured(row, groupRows, fixtures, 2);
+    const pos3 = final || isPositionSecured(row, groupRows, fixtures, 3);
+
     let bonus = 0;
+    if (row.position === 1 && pos1) bonus = TEAM_POINTS.winGroup;
+    else if (row.position === 2 && pos2) bonus = TEAM_POINTS.secondGroup;
+    else if (row.position === 3 && pos3) bonus = TEAM_POINTS.thirdQualified;
 
-    if (row.matches >= 3) {
-      if (row.position === 1) bonus = TEAM_POINTS.winGroup;
-      else if (row.position === 2) bonus = TEAM_POINTS.secondGroup;
-      else if (row.position === 3) bonus = TEAM_POINTS.thirdQualified;
+    if (bonus > 0) {
+      points.set(name, (points.get(name) ?? 0) + bonus);
+      bonuses.set(name, bonus);
     }
-
-    if (bonus > 0) result.set(name, existing + bonus);
   }
 
-  return result;
+  return { points, bonuses };
 }
 
 // Find the best-matching API name for a pool pick label

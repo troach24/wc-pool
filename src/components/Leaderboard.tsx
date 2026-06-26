@@ -29,6 +29,10 @@ export function Leaderboard({ entries, livePoints }: Props) {
           total={total(entry.name)}
           pickValues={livePoints.pickValues}
           livePickLabels={livePoints.livePickLabels}
+          allFixtures={livePoints.allFixtures}
+          allMatchImpacts={livePoints.allMatchImpacts}
+          pickToTeam={livePoints.pickToTeam}
+          pickGroupBonus={livePoints.pickGroupBonus}
         />
       ))}
     </div>

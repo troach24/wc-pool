@@ -1,35 +1,65 @@
 import { useState } from 'react';
 import type { Entry } from '../lib/types';
+import type { WCEvent } from '../lib/api';
+import type { PickImpact } from '../lib/pointCalc';
+import { PickBreakdownModal } from './PickBreakdownModal';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
+
+type MatchImpact = { event: WCEvent; impacts: PickImpact[] };
 
 function PickChip({
   label,
   value,
   live,
+  allFixtures,
+  allMatchImpacts,
+  pickToTeam,
+  pickGroupBonus,
 }: {
   label: string;
   value: number;
   live: boolean;
+  allFixtures: WCEvent[];
+  allMatchImpacts: MatchImpact[];
+  pickToTeam: Map<string, string>;
+  pickGroupBonus: Map<string, number>;
 }) {
+  const [showModal, setShowModal] = useState(false);
+
   return (
-    <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
-      <div className="flex items-center gap-1">
-        {live && (
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" title="scoring live" />
-        )}
-        <span
-          className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${
-            value === 0
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
-              : 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-          }`}
-        >
-          +{value}
-        </span>
-      </div>
-    </div>
+    <>
+      <button
+        className="w-full flex items-center justify-between gap-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1 -mx-1 transition-colors"
+        onClick={() => setShowModal(true)}
+      >
+        <span className="text-sm text-gray-700 dark:text-gray-300 text-left">{label}</span>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {live && (
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" title="scoring live" />
+          )}
+          <span
+            className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${
+              value === 0
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                : 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+            }`}
+          >
+            +{value}
+          </span>
+        </div>
+      </button>
+      {showModal && (
+        <PickBreakdownModal
+          label={label}
+          allFixtures={allFixtures}
+          allMatchImpacts={allMatchImpacts}
+          pickToTeam={pickToTeam}
+          pickGroupBonus={pickGroupBonus}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -39,9 +69,13 @@ type Props = {
   total: number;
   pickValues: Map<string, number>;
   livePickLabels: Set<string>;
+  allFixtures: WCEvent[];
+  allMatchImpacts: MatchImpact[];
+  pickToTeam: Map<string, string>;
+  pickGroupBonus: Map<string, number>;
 };
 
-export function EntryCard({ entry, rank, total, pickValues, livePickLabels }: Props) {
+export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allFixtures, allMatchImpacts, pickToTeam, pickGroupBonus }: Props) {
   const [open, setOpen] = useState(false);
 
   const displayTotal = total;
@@ -118,6 +152,10 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels }: Pr
                   label={p.label}
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
+                  allFixtures={allFixtures}
+                  allMatchImpacts={allMatchImpacts}
+                  pickToTeam={pickToTeam}
+                  pickGroupBonus={pickGroupBonus}
                 />
               ))}
             </div>
@@ -131,6 +169,10 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels }: Pr
                   label={p.label}
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
+                  allFixtures={allFixtures}
+                  allMatchImpacts={allMatchImpacts}
+                  pickToTeam={pickToTeam}
+                  pickGroupBonus={pickGroupBonus}
                 />
               ))}
             </div>
@@ -144,6 +186,10 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels }: Pr
                   label={p.label}
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
+                  allFixtures={allFixtures}
+                  allMatchImpacts={allMatchImpacts}
+                  pickToTeam={pickToTeam}
+                  pickGroupBonus={pickGroupBonus}
                 />
               ))}
             </div>
