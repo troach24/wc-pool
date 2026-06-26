@@ -185,6 +185,11 @@ export function GoalAnimation({ onDone, kit }: Props) {
         </svg>
       </div>
 
+      {/* shockwave rings that burst outward when ball hits the net */}
+      <div className="goal-burst goal-burst-1" />
+      <div className="goal-burst goal-burst-2" />
+      <div className="goal-burst goal-burst-3" />
+
       <div className="goal-text">GOAL!</div>
     </div>
   );
@@ -240,9 +245,26 @@ const CSS = `
              goalPulse 0.6s ease-in-out 2s infinite alternate;
 }
 @keyframes ballFly {
-  0%   { transform: translate(-46vw, 30vh) rotate(0deg) scale(1.5); }
-  55%  { transform: translate(-12vw, -24vh) rotate(820deg) scale(1.05); }
-  100% { transform: translate(0, -1vh) rotate(1480deg) scale(0.4); }
+  0%   { transform: translate(-46vw, 30vh) rotate(0deg)    scale(1.5);  opacity: 1; filter: blur(0); }
+  55%  { transform: translate(-12vw, -24vh) rotate(820deg)  scale(1.05); opacity: 1; filter: blur(0); }
+  82%  { transform: translate(0, -1vh)   rotate(1480deg) scale(0.4);  opacity: 1; filter: blur(0); }
+  88%  { transform: translate(0, -1vh)   rotate(1510deg) scale(2.2);  opacity: 0.7; filter: blur(1px); }
+  100% { transform: translate(0, -1vh)   rotate(1540deg) scale(5);    opacity: 0;   filter: blur(6px); }
+}
+.goal-burst {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.85);
+  width: 8vmin; height: 8vmin;
+  opacity: 0;
+}
+.goal-burst-1 { animation: burstRing 0.5s cubic-bezier(0.1,0.6,0.4,1) 1.08s forwards; border-color: rgba(255,255,255,0.9); }
+.goal-burst-2 { animation: burstRing 0.6s cubic-bezier(0.1,0.6,0.4,1) 1.14s forwards; border-color: rgba(240,165,0,0.8); width: 8vmin; height: 8vmin; }
+.goal-burst-3 { animation: burstRing 0.7s cubic-bezier(0.1,0.6,0.4,1) 1.22s forwards; border-color: rgba(255,255,255,0.5); }
+@keyframes burstRing {
+  0%   { opacity: 1; transform: scale(0.3); }
+  70%  { opacity: 0.6; }
+  100% { opacity: 0; transform: scale(5); }
 }
 @keyframes netRipple {
   0% { transform: scale(1); }
