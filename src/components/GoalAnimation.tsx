@@ -190,71 +190,138 @@ export function GoalAnimation({ onDone, kit }: Props) {
       <div className="goal-burst goal-burst-2" />
       <div className="goal-burst goal-burst-3" />
 
-      {/* Mascot sitting on the crossbar, sweeping a flamethrower */}
+      {/* Mascot perched above the crossbar, sweeping a flamethrower */}
       <div className="goal-mascot">
-        <svg viewBox="0 0 320 180" width="100%" height="100%" overflow="visible">
+        <svg viewBox="0 0 340 210" width="100%" height="100%" overflow="visible">
           <defs>
-            <filter id="ff" x="-100%" y="-100%" width="300%" height="300%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.035 0.07" numOctaves="3" result="noise">
-                <animate attributeName="seed" values="1;3;6;9;2;1" dur="0.25s" repeatCount="indefinite"/>
+            <filter id="ff" x="-150%" y="-150%" width="400%" height="400%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.03 0.06" numOctaves="4" result="noise">
+                <animate attributeName="seed" values="1;4;7;11;2;1" dur="0.22s" repeatCount="indefinite"/>
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G"/>
             </filter>
+            {/* Jersey gradient */}
+            <linearGradient id="jg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={kit.jersey} stopOpacity="1"/>
+              <stop offset="100%" stopColor={kit.jersey} stopOpacity="0.8"/>
+            </linearGradient>
           </defs>
 
-          {/* Legs dangling off crossbar */}
-          <g style={{ transformOrigin: '160px 130px', animation: 'legSwing 1.4s ease-in-out infinite alternate' }}>
-            <rect x="143" y="128" width="14" height="30" rx="6" fill={kit.shorts}/>
-            <rect x="143" y="150" width="14" height="12" rx="4" fill="#1a1a2e"/>
+          {/* ── LEGS hanging below crossbar ── */}
+          {/* Left leg — swings one way */}
+          <g style={{ transformOrigin: '148px 172px', animation: 'legSwing 1.5s ease-in-out 2.05s infinite alternate' }}>
+            {/* thigh */}
+            <path d="M140 172 Q138 192 136 208" stroke={kit.shorts} strokeWidth="16" strokeLinecap="round" fill="none"/>
+            {/* shin */}
+            <path d="M136 208 Q134 220 130 226" stroke="#f4c39a" strokeWidth="12" strokeLinecap="round" fill="none"/>
+            {/* boot */}
+            <ellipse cx="124" cy="229" rx="13" ry="7" fill="#1a1a2e" transform="rotate(-15 124 229)"/>
+            <rect x="114" y="223" width="18" height="10" rx="4" fill="#111" transform="rotate(-15 123 228)"/>
           </g>
-          <g style={{ transformOrigin: '160px 130px', animation: 'legSwing 1.4s ease-in-out infinite alternate-reverse' }}>
-            <rect x="163" y="128" width="14" height="30" rx="6" fill={kit.shorts}/>
-            <rect x="163" y="150" width="14" height="12" rx="4" fill="#1a1a2e"/>
+          {/* Right leg */}
+          <g style={{ transformOrigin: '172px 172px', animation: 'legSwing 1.5s ease-in-out 2.05s infinite alternate-reverse' }}>
+            <path d="M180 172 Q182 192 184 208" stroke={kit.shorts} strokeWidth="16" strokeLinecap="round" fill="none"/>
+            <path d="M184 208 Q186 220 190 226" stroke="#f4c39a" strokeWidth="12" strokeLinecap="round" fill="none"/>
+            <ellipse cx="196" cy="229" rx="13" ry="7" fill="#1a1a2e" transform="rotate(15 196 229)"/>
+            <rect x="188" y="223" width="18" height="10" rx="4" fill="#111" transform="rotate(15 197 228)"/>
           </g>
 
-          {/* Body / jersey */}
-          <rect x="136" y="88" width="48" height="44" rx="12" fill={kit.jersey} stroke="rgba(0,0,0,0.15)" strokeWidth="1.5"/>
-          {/* Kit code on chest */}
-          <text x="160" y="115" textAnchor="middle" fontFamily="Oswald,sans-serif" fontSize="11" fontWeight="700" fill={inkOn(kit.jersey)}>{kit.code}</text>
+          {/* ── BODY ── */}
+          {/* Torso */}
+          <path d="M128 105 Q130 88 160 86 Q190 88 192 105 L188 165 Q160 172 132 165 Z"
+                fill="url(#jg)" stroke="rgba(0,0,0,0.18)" strokeWidth="1.5"/>
+          {/* Jersey collar V-neck */}
+          <path d="M148 88 L160 100 L172 88" fill="none" stroke={kit.accent} strokeWidth="3" strokeLinecap="round"/>
+          {/* Jersey number */}
+          <text x="160" y="140" textAnchor="middle" fontFamily="Oswald,sans-serif" fontSize="22" fontWeight="900" fill={inkOn(kit.jersey)} opacity="0.85">10</text>
+          {/* Sleeve accent stripes */}
+          <path d="M128 108 Q120 112 118 118" stroke={kit.accent} strokeWidth="8" strokeLinecap="round" fill="none"/>
+          <path d="M192 108 Q200 112 202 118" stroke={kit.accent} strokeWidth="8" strokeLinecap="round" fill="none"/>
 
-          {/* Left arm (static, gripping bar) */}
-          <rect x="108" y="116" width="30" height="11" rx="5" fill={kit.jersey} transform="rotate(10 123 121)"/>
-          <circle cx="110" cy="124" r="8" fill="#f4c39a"/>
+          {/* ── LEFT ARM — gripping crossbar ── */}
+          {/* upper arm */}
+          <path d="M132 110 Q118 122 112 132" stroke={kit.jersey} strokeWidth="18" strokeLinecap="round" fill="none"/>
+          {/* forearm */}
+          <path d="M112 132 Q104 140 100 148" stroke="#f4c39a" strokeWidth="14" strokeLinecap="round" fill="none"/>
+          {/* glove */}
+          <circle cx="98" cy="152" r="11" fill="#f0f0f0"/>
+          <path d="M89 148 Q90 142 96 140" stroke="#ddd" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          <path d="M87 153 Q86 147 92 145" stroke="#ddd" strokeWidth="3" strokeLinecap="round" fill="none"/>
 
-          {/* Flamethrower arm — rotates around shoulder (right side) */}
-          <g className="ft-arm" style={{ transformOrigin: '184px 100px' }}>
-            {/* Upper arm */}
-            <rect x="182" y="95" width="28" height="11" rx="5" fill={kit.jersey}/>
-            {/* Forearm */}
-            <rect x="206" y="96" width="26" height="10" rx="4" fill="#f4c39a"/>
-            {/* Flamethrower body */}
-            <rect x="228" y="90" width="54" height="18" rx="5" fill="#2d2d2d"/>
-            <rect x="236" y="86" width="16" height="8" rx="3" fill="#444" opacity="0.8"/>
-            {/* Tank */}
-            <ellipse cx="242" cy="99" rx="10" ry="9" fill="#555"/>
-            {/* Nozzle */}
-            <rect x="278" y="93" width="18" height="12" rx="3" fill="#666"/>
-            {/* Flame stream */}
+          {/* ── RIGHT ARM + FLAMETHROWER (animated sweep) ── */}
+          <g className="ft-arm" style={{ transformOrigin: '188px 112px' }}>
+            {/* upper arm */}
+            <path d="M188 112 Q204 116 216 122" stroke={kit.jersey} strokeWidth="18" strokeLinecap="round" fill="none"/>
+            {/* forearm */}
+            <path d="M216 122 Q228 126 238 128" stroke="#f4c39a" strokeWidth="14" strokeLinecap="round" fill="none"/>
+            {/* glove gripping gun */}
+            <circle cx="244" cy="130" r="10" fill="#f0f0f0"/>
+
+            {/* Flamethrower gun body */}
+            <rect x="240" y="118" width="70" height="20" rx="6" fill="#1c1c1c"/>
+            {/* Tank cylinder on top */}
+            <rect x="248" y="106" width="34" height="14" rx="7" fill="#3a3a3a"/>
+            <ellipse cx="248" cy="113" rx="7" ry="7" fill="#444"/>
+            <ellipse cx="282" cy="113" rx="7" ry="7" fill="#444"/>
+            {/* Fuel hose */}
+            <path d="M256 120 Q258 126 260 128" stroke="#555" strokeWidth="4" fill="none"/>
+            {/* Trigger guard */}
+            <path d="M268 138 Q272 146 276 138" stroke="#333" strokeWidth="3" fill="none"/>
+            {/* Grip */}
+            <rect x="264" y="134" width="14" height="18" rx="4" fill="#222"/>
+            {/* Barrel */}
+            <rect x="306" y="121" width="36" height="14" rx="4" fill="#2a2a2a"/>
+            {/* Nozzle cone */}
+            <path d="M340 121 L356 125 L340 135 Z" fill="#333"/>
+            {/* Nozzle tip glow */}
+            <circle cx="358" cy="128" r="5" fill="#ff6600" opacity="0.8"/>
+
+            {/* ── FLAME STREAM ── */}
             <g filter="url(#ff)">
-              <ellipse cx="324" cy="99" rx="30" ry="14" fill="#ff4400" opacity="0.95"/>
-              <ellipse cx="346" cy="99" rx="22" ry="9"  fill="#ff7700" opacity="0.85"/>
-              <ellipse cx="362" cy="99" rx="14" ry="6"  fill="#ffbb00" opacity="0.80"/>
-              <ellipse cx="374" cy="99" rx="7"  ry="3"  fill="#fff176" opacity="0.70"/>
+              {/* Core — white hot */}
+              <ellipse cx="388" cy="128" rx="22" ry="7"  fill="#fff8e0" opacity="0.95"/>
+              {/* Inner — yellow */}
+              <ellipse cx="400" cy="128" rx="30" ry="11" fill="#ffdd00" opacity="0.90"/>
+              {/* Mid — orange */}
+              <ellipse cx="420" cy="128" rx="38" ry="14" fill="#ff7700" opacity="0.85"/>
+              {/* Outer — deep orange/red */}
+              <ellipse cx="440" cy="128" rx="32" ry="16" fill="#ff3300" opacity="0.75"/>
+              {/* Wisp tail */}
+              <ellipse cx="464" cy="128" rx="20" ry="10" fill="#cc2200" opacity="0.50"/>
             </g>
           </g>
 
-          {/* Head */}
-          <circle cx="160" cy="68" r="24" fill="#f7cda6"/>
-          {/* Hair */}
-          <path d="M136 60 Q138 42 160 42 Q182 42 184 60 Q175 50 160 50 Q145 50 136 60Z" fill="#241712"/>
-          {/* Eyes — wide excited */}
-          <circle cx="151" cy="65" r="4" fill="#fff"/><circle cx="151" cy="65" r="2.5" fill="#2a1c12"/>
-          <circle cx="169" cy="65" r="4" fill="#fff"/><circle cx="169" cy="65" r="2.5" fill="#2a1c12"/>
-          {/* Big grin */}
-          <path d="M148 76 Q160 86 172 76" stroke="#3a1a10" strokeWidth="2.5" fill="#ff7c5c" strokeLinecap="round"/>
-          {/* Cheeks */}
-          <circle cx="144" cy="74" r="5" fill="#ffaaaa" opacity="0.5"/>
-          <circle cx="176" cy="74" r="5" fill="#ffaaaa" opacity="0.5"/>
+          {/* ── HEAD ── */}
+          {/* Neck */}
+          <rect x="153" y="72" width="14" height="18" rx="6" fill="#f4c39a"/>
+          {/* Head shape — slightly wide */}
+          <ellipse cx="160" cy="52" rx="32" ry="30" fill="#f7cda6"/>
+          {/* Hair — messy spikes */}
+          <path d="M128 46 Q130 20 148 16 Q152 28 156 30 Q158 14 160 12 Q162 14 164 30 Q168 28 172 16 Q190 20 192 46 Q180 36 160 36 Q140 36 128 46Z" fill="#241712"/>
+          {/* Eyebrows — raised/excited */}
+          <path d="M140 38 Q148 34 154 37" stroke="#241712" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          <path d="M166 37 Q172 34 180 38" stroke="#241712" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          {/* Eyes — wide with shine */}
+          <ellipse cx="148" cy="46" rx="7" ry="7.5" fill="#fff"/>
+          <circle cx="150" cy="47" r="5" fill="#3d2200"/>
+          <circle cx="152" cy="44" r="1.8" fill="#fff"/>
+          <ellipse cx="172" cy="46" rx="7" ry="7.5" fill="#fff"/>
+          <circle cx="174" cy="47" r="5" fill="#3d2200"/>
+          <circle cx="176" cy="44" r="1.8" fill="#fff"/>
+          {/* Nose */}
+          <path d="M157 54 Q160 58 163 54" stroke="#e0a07a" strokeWidth="2" fill="none" strokeLinecap="round"/>
+          {/* Big open grin with teeth */}
+          <path d="M142 62 Q160 76 178 62" fill="#cc3300" stroke="#241712" strokeWidth="1.5"/>
+          <path d="M142 62 Q160 66 178 62" fill="#fff"/>
+          {/* Dimples */}
+          <circle cx="138" cy="60" r="4" fill="#f0a080" opacity="0.45"/>
+          <circle cx="182" cy="60" r="4" fill="#f0a080" opacity="0.45"/>
+          {/* Ear left */}
+          <ellipse cx="128" cy="50" rx="6" ry="8" fill="#f4c39a"/>
+          <ellipse cx="129" cy="50" rx="3" ry="5" fill="#e0a07a"/>
+          {/* Ear right */}
+          <ellipse cx="192" cy="50" rx="6" ry="8" fill="#f4c39a"/>
+          <ellipse cx="191" cy="50" rx="3" ry="5" fill="#e0a07a"/>
         </svg>
       </div>
 
@@ -341,28 +408,30 @@ const CSS = `
 }
 .goal-mascot {
   position: absolute;
-  top: calc(50% - 28vmin);
+  /* sit just above the crossbar: net top is ~50% - 15.5vmin, crossbar is ~12% down */
+  bottom: calc(50% + 13vmin);
   left: 50%;
   transform: translateX(-50%);
-  width: 52vmin;
-  height: 28vmin;
+  width: 64vmin;
+  height: 34vmin;
   opacity: 0;
-  animation: mascotIn 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) 1.5s forwards;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5));
+  animation: mascotIn 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) 1.5s forwards;
 }
 .ft-arm {
-  animation: ftSweep 1.3s ease-in-out 2.05s infinite alternate;
+  animation: ftSweep 1.4s ease-in-out 2.1s infinite alternate;
 }
 @keyframes mascotIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.7); }
+  from { opacity: 0; transform: translateX(-50%) translateY(16px) scale(0.65); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 @keyframes ftSweep {
-  from { transform: rotate(-32deg); }
-  to   { transform: rotate(32deg); }
+  from { transform: rotate(-36deg); }
+  to   { transform: rotate(28deg); }
 }
 @keyframes legSwing {
-  from { transform: rotate(-12deg); }
-  to   { transform: rotate(12deg); }
+  from { transform: rotate(-14deg); }
+  to   { transform: rotate(14deg); }
 }
 @keyframes goalPop {
   0%   { opacity: 0; transform: scale(0.3) translateY(12px); }
