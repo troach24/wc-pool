@@ -205,6 +205,13 @@ export function GoalAnimation({ onDone, kit }: Props) {
               <stop offset="0%" stopColor={kit.jersey} stopOpacity="1"/>
               <stop offset="100%" stopColor={kit.jersey} stopOpacity="0.8"/>
             </linearGradient>
+            {/* Pit Viper mirrored lens gradient */}
+            <linearGradient id="pvg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"   stopColor={kit.accent}/>
+              <stop offset="40%"  stopColor={kit.jersey}/>
+              <stop offset="70%"  stopColor={kit.accent}/>
+              <stop offset="100%" stopColor={kit.jersey}/>
+            </linearGradient>
           </defs>
 
           {/* ── LEGS hanging below crossbar ── */}
@@ -301,13 +308,24 @@ export function GoalAnimation({ onDone, kit }: Props) {
           {/* Eyebrows — raised/excited */}
           <path d="M140 38 Q148 34 154 37" stroke="#241712" strokeWidth="3" strokeLinecap="round" fill="none"/>
           <path d="M166 37 Q172 34 180 38" stroke="#241712" strokeWidth="3" strokeLinecap="round" fill="none"/>
-          {/* Eyes — wide with shine */}
-          <ellipse cx="148" cy="46" rx="7" ry="7.5" fill="#fff"/>
-          <circle cx="150" cy="47" r="5" fill="#3d2200"/>
-          <circle cx="152" cy="44" r="1.8" fill="#fff"/>
-          <ellipse cx="172" cy="46" rx="7" ry="7.5" fill="#fff"/>
-          <circle cx="174" cy="47" r="5" fill="#3d2200"/>
-          <circle cx="176" cy="44" r="1.8" fill="#fff"/>
+          {/* ── PIT VIPERS ── huge wraparound mirrored shades */}
+          {/* Left lens */}
+          <path d="M116 36 L155 34 L156 54 Q135 60 116 52 Z" fill="url(#pvg)" opacity="0.93"/>
+          {/* Right lens */}
+          <path d="M165 34 L204 36 L204 52 Q185 60 164 54 Z" fill="url(#pvg)" opacity="0.93"/>
+          {/* Frame outlines */}
+          <path d="M116 36 L155 34 L156 54 Q135 60 116 52 Z" fill="none" stroke="#111" strokeWidth="3" strokeLinejoin="round"/>
+          <path d="M165 34 L204 36 L204 52 Q185 60 164 54 Z" fill="none" stroke="#111" strokeWidth="3" strokeLinejoin="round"/>
+          {/* Bridge */}
+          <path d="M155 37 Q160 35 165 37" fill="none" stroke="#111" strokeWidth="3.5" strokeLinecap="round"/>
+          {/* Temple arms wrapping to ears */}
+          <path d="M116 44 Q112 46 128 51" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M204 44 Q208 46 192 51" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/>
+          {/* Mirror sheens — two highlights per lens */}
+          <path d="M120 39 Q133 36 150 37" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+          <path d="M120 45 Q128 43 138 44" stroke="rgba(255,255,255,0.30)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+          <path d="M170 37 Q187 36 200 39" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+          <path d="M182 44 Q192 43 200 45" stroke="rgba(255,255,255,0.30)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
           {/* Nose */}
           <path d="M157 54 Q160 58 163 54" stroke="#e0a07a" strokeWidth="2" fill="none" strokeLinecap="round"/>
           {/* Big open grin with teeth */}
