@@ -67,6 +67,8 @@ export type StandingsPayload = {
   pickToTeam: [string, string][];
   // pick label → group position bonus (8/4/2), only present when earned.
   pickGroupBonus: [string, number][];
+  // pick label → fixture IDs whose points must NOT count (commissioner exceptions).
+  pickExcludedFixtures: [string, number[]][];
   lastUpdated: string;
   // Monotonically increasing counter — increments once per detected goal.
   // Clients store the last value they celebrated and fire the animation on
@@ -180,9 +182,6 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
       const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
       if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
     }
-    const m2 = findPlayerByCountry(label, stats.players.keys(), teamOf);
-    const team = m2 ? teamOf(m2) : undefined;
-    if (team) pickToTeam.set(label, team);
   }
   for (const label of keeperLabels) {
     const excl = PICK_MATCH_EXCLUSIONS[label];
@@ -192,9 +191,6 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
       const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
       if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
     }
-    const m2 = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
-    const team = m2 ? teamOf(m2) : undefined;
-    if (team) pickToTeam.set(label, team);
   }
 
   const allImpacts = lineResults.map(({ event, lines }) => {
@@ -246,6 +242,7 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     allMatchImpacts: allImpacts,
     pickToTeam: [...pickToTeam],
     pickGroupBonus: [...pickGroupBonus],
+    pickExcludedFixtures: Object.entries(PICK_MATCH_EXCLUSIONS),
     lastUpdated: new Date().toISOString(),
     goalSeq,
     goalTeam,

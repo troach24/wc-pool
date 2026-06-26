@@ -16,6 +16,7 @@ function PickChip({
   allMatchImpacts,
   pickToTeam,
   pickGroupBonus,
+  pickExcludedFixtures,
 }: {
   label: string;
   value: number;
@@ -24,6 +25,7 @@ function PickChip({
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
   pickGroupBonus: Map<string, number>;
+  pickExcludedFixtures: Map<string, number[]>;
 }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -56,6 +58,7 @@ function PickChip({
           allMatchImpacts={allMatchImpacts}
           pickToTeam={pickToTeam}
           pickGroupBonus={pickGroupBonus}
+          pickExcludedFixtures={pickExcludedFixtures}
           onClose={() => setShowModal(false)}
         />
       )}
@@ -73,9 +76,10 @@ type Props = {
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
   pickGroupBonus: Map<string, number>;
+  pickExcludedFixtures: Map<string, number[]>;
 };
 
-export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allFixtures, allMatchImpacts, pickToTeam, pickGroupBonus }: Props) {
+export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allFixtures, allMatchImpacts, pickToTeam, pickGroupBonus, pickExcludedFixtures }: Props) {
   const [open, setOpen] = useState(false);
 
   const displayTotal = total;
@@ -156,6 +160,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
                   pickGroupBonus={pickGroupBonus}
+                  pickExcludedFixtures={pickExcludedFixtures}
                 />
               ))}
             </div>
@@ -173,6 +178,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
                   pickGroupBonus={pickGroupBonus}
+                  pickExcludedFixtures={pickExcludedFixtures}
                 />
               ))}
             </div>
@@ -190,6 +196,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
                   pickGroupBonus={pickGroupBonus}
+                  pickExcludedFixtures={pickExcludedFixtures}
                 />
               ))}
             </div>

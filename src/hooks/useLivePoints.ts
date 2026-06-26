@@ -19,6 +19,7 @@ export type LivePointsResult = {
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
   pickGroupBonus: Map<string, number>;
+  pickExcludedFixtures: Map<string, number[]>;
   lastUpdated: Date;
   goalSeq: number;
   goalTeam?: string;
@@ -45,6 +46,7 @@ export function useLivePoints() {
         allMatchImpacts: p.allMatchImpacts,
         pickToTeam: new Map(p.pickToTeam),
         pickGroupBonus: new Map(p.pickGroupBonus),
+        pickExcludedFixtures: new Map(p.pickExcludedFixtures),
         lastUpdated: new Date(p.lastUpdated),
         goalSeq: p.goalSeq,
         goalTeam: p.goalTeam,

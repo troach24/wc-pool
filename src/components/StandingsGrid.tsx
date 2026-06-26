@@ -111,6 +111,7 @@ export function StandingsGrid({ entries, livePoints }: Props) {
           allMatchImpacts={livePoints.allMatchImpacts}
           pickToTeam={livePoints.pickToTeam}
           pickGroupBonus={livePoints.pickGroupBonus}
+          pickExcludedFixtures={livePoints.pickExcludedFixtures}
           onClose={() => setModalLabel(null)}
         />
       )}

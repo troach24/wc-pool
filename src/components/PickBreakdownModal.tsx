@@ -1,7 +1,7 @@
 import { matchWinner, roundResultPoints } from '../lib/pointCalc';
 import { TEAM_POINTS } from '../lib/scoring';
 import type { WCEvent } from '../lib/api';
-import type { PickImpact } from '../lib/pointCalc';
+import type { PickImpact, BreakdownItem } from '../lib/pointCalc';
 
 type MatchImpact = { event: WCEvent; impacts: PickImpact[] };
 
@@ -10,22 +10,28 @@ type SubItem = { label: string; points: number; color: string };
 const BADGE: Record<string, string> = {
   green:  'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
   teal:   'bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
+  cyan:   'bg-cyan-50 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
+  sky:    'bg-sky-50 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300',
   blue:   'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
   purple: 'bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
   amber:  'bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  red:    'bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300',
 };
 
 const TEXT: Record<string, string> = {
   green:  'text-emerald-700 dark:text-emerald-300',
   teal:   'text-teal-700 dark:text-teal-300',
+  cyan:   'text-cyan-700 dark:text-cyan-300',
+  sky:    'text-sky-700 dark:text-sky-300',
   blue:   'text-blue-700 dark:text-blue-300',
   purple: 'text-purple-700 dark:text-purple-300',
   amber:  'text-amber-700 dark:text-amber-300',
+  red:    'text-red-700 dark:text-red-300',
 };
 
 function roundWinLabel(round: string): string {
   const r = round.toLowerCase();
-  if (r.includes('group'))                           return 'Group Win';
+  if (r.includes('group'))                           return 'Team Win';
   if (r.includes('round of 32'))                    return 'RD of 32 Win';
   if (r.includes('round of 16'))                    return 'RD of 16 Win';
   if (r.includes('quarter'))                         return 'Quarterfinal Win';
@@ -64,6 +70,7 @@ export function PickBreakdownModal({
   allMatchImpacts,
   pickToTeam,
   pickGroupBonus,
+  pickExcludedFixtures,
   onClose,
 }: {
   label: string;
@@ -71,16 +78,24 @@ export function PickBreakdownModal({
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
   pickGroupBonus: Map<string, number>;
+  pickExcludedFixtures: Map<string, number[]>;
   onClose: () => void;
 }) {
   const teamName   = pickToTeam.get(label);
   const isTeam     = teamName !== undefined;
   const groupBonus = pickGroupBonus.get(label) ?? 0;
+  const excluded   = new Set(pickExcludedFixtures.get(label) ?? []);
 
   const pointsByFixture = new Map<number, number>();
   for (const mi of allMatchImpacts) {
-    const pts = mi.impacts.find((i) => i.label === label)?.points ?? 0;
+    const pts = excluded.has(mi.event.id) ? 0 : (mi.impacts.find((i) => i.label === label)?.points ?? 0);
     pointsByFixture.set(mi.event.id, pts);
+  }
+
+  const breakdownByFixture = new Map<number, BreakdownItem[]>();
+  for (const mi of allMatchImpacts) {
+    const imp = mi.impacts.find((i) => i.label === label);
+    if (imp?.breakdown) breakdownByFixture.set(mi.event.id, imp.breakdown);
   }
 
   const rows = allFixtures
@@ -120,18 +135,19 @@ export function PickBreakdownModal({
           ) : (
             <div className="flex flex-col gap-0.5">
               {rows.map((r, i) => {
-                const items = isTeam ? teamBreakdown(r.event, teamName!) : null;
+                const teamItems = isTeam ? teamBreakdown(r.event, teamName!) : null;
+                const nonTeamItems: BreakdownItem[] | null = !isTeam ? (breakdownByFixture.get(r.event.id) ?? null) : null;
                 const hasPoints = r.points > 0;
 
                 return (
-                  <div key={i} className={`py-1.5 border-b border-gray-50 dark:border-gray-700 last:border-0 ${!hasPoints ? 'opacity-40' : ''}`}>
+                  <div key={i} className="py-1.5 border-b border-gray-50 dark:border-gray-700 last:border-0">
                     {/* Match header */}
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs text-gray-400 dark:text-gray-500 min-w-[44px]">{fmtDate(r.event.startTimestamp)}</span>
                       <span className="flex-1 text-xs text-gray-600 dark:text-gray-400 text-center">
                         {r.event.homeTeam.name} {r.event.homeScore.current}–{r.event.awayScore.current} {r.event.awayTeam.name}
                       </span>
-                      {!isTeam && (
+                      {!isTeam && !nonTeamItems && (
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${hasPoints ? BADGE.blue : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
                           +{r.points}
                         </span>
@@ -139,9 +155,23 @@ export function PickBreakdownModal({
                     </div>
 
                     {/* Per-item breakdown for teams */}
-                    {isTeam && items && items.length > 0 && (
+                    {teamItems && teamItems.length > 0 && (
                       <div className="flex flex-col gap-0.5 pl-[52px]">
-                        {items.map((item, j) => (
+                        {teamItems.map((item, j) => (
+                          <div key={j} className="flex items-center justify-between gap-2">
+                            <span className={`text-xs ${TEXT[item.color]}`}>{item.label}</span>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${BADGE[item.color]}`}>
+                              +{item.points}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Per-item breakdown for players/keepers */}
+                    {nonTeamItems && nonTeamItems.length > 0 && (
+                      <div className="flex flex-col gap-0.5 pl-[52px]">
+                        {nonTeamItems.map((item, j) => (
                           <div key={j} className="flex items-center justify-between gap-2">
                             <span className={`text-xs ${TEXT[item.color]}`}>{item.label}</span>
                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full min-w-[36px] text-center ${BADGE[item.color]}`}>
