@@ -80,8 +80,10 @@ export type StandingsPayload = {
 };
 
 function makeSupabase() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const env = (globalThis as any).process?.env ?? {};
+  const url: string | undefined = env.SUPABASE_URL;
+  const key: string | undefined = env.SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return createClient(url, key);
 }
