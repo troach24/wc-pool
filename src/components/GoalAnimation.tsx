@@ -89,7 +89,7 @@ export function GoalAnimation({ onDone, kit }: Props) {
       last = now;
       elapsed += dt;
 
-      ctx!.clearRect(0, 0, canvas.width, canvas.height);
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
 
       for (const p of pieces) {
         p.x += p.vx;
