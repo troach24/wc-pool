@@ -1,17 +1,15 @@
 import type { Entry, Pick } from './types';
 
-type RawPick = [string, number];
 type RawEntry = {
   name: string;
-  teams: [RawPick, RawPick, RawPick];
-  players: [RawPick, RawPick, RawPick];
-  keepers: [RawPick, RawPick, RawPick];
-  points: number;
+  teams: [string, string, string];
+  players: [string, string, string];
+  keepers: [string, string, string];
   note?: string;
 };
 
-function toPick([label, points]: RawPick): Pick {
-  return { label: label.trim(), points };
+function toPick(label: string): Pick {
+  return { label: label.trim() };
 }
 
 export function fromRaw(raw: RawEntry): Entry {
@@ -20,7 +18,6 @@ export function fromRaw(raw: RawEntry): Entry {
     teams: raw.teams.map(toPick) as [Pick, Pick, Pick],
     players: raw.players.map(toPick) as [Pick, Pick, Pick],
     keepers: raw.keepers.map(toPick) as [Pick, Pick, Pick],
-    points: raw.points,
     note: raw.note,
   };
 }

@@ -29,8 +29,3 @@ export const KEEPER_POINTS = {
   shutout: 3,
   save: 1,
 } as const;
-
-export function sumEntry(entry: { teams: [any,any,any]; players: [any,any,any]; keepers: [any,any,any] }): number {
-  const all = [...entry.teams, ...entry.players, ...entry.keepers];
-  return all.reduce((sum, p) => sum + (p.points ?? 0), 0);
-}

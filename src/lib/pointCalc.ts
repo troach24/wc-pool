@@ -242,15 +242,29 @@ export function applyGroupBonuses(
   const points = new Map(teamPoints);
   const bonuses = new Map<string, number>();
 
+  // API-Football occasionally returns duplicate rows under "Group Stage" (no letter)
+  // alongside the real group entries. Keep only named groups ("Group A", "Group B", …).
+  const validStandings = standings.filter((r) => /^Group [A-Z]$/i.test(r.group ?? ''));
+
+  // Which teams are scheduled to play in the Round of 32?  Only those 3rd-place
+  // finishers count as "qualified" — the other 3rd-place teams are eliminated.
+  const r32TeamIds = new Set<number>();
+  for (const f of fixtures) {
+    if (f.round.toLowerCase().includes('round of 32')) {
+      r32TeamIds.add(f.homeTeam.id);
+      r32TeamIds.add(f.awayTeam.id);
+    }
+  }
+
   // Group standings rows by group letter so we can reason about each group.
   const byGroup = new Map<string, StandingRow[]>();
-  for (const row of standings) {
+  for (const row of validStandings) {
     const g = row.group ?? '';
     if (!byGroup.has(g)) byGroup.set(g, []);
     byGroup.get(g)!.push(row);
   }
 
-  for (const row of standings) {
+  for (const row of validStandings) {
     const name = row.team.name;
     const groupRows = byGroup.get(row.group ?? '') ?? [row];
 
@@ -260,9 +274,14 @@ export function applyGroupBonuses(
     const pos3 = final || isPositionSecured(row, groupRows, fixtures, 3);
 
     let bonus = 0;
-    if (row.position === 1 && pos1) bonus = TEAM_POINTS.winGroup;
-    else if (row.position === 2 && pos2) bonus = TEAM_POINTS.secondGroup;
-    else if (row.position === 3 && pos3) bonus = TEAM_POINTS.thirdQualified;
+    if (row.position === 1 && pos1) {
+      bonus = TEAM_POINTS.winGroup;
+    } else if (row.position === 2 && pos2) {
+      bonus = TEAM_POINTS.secondGroup;
+    } else if (row.position === 3 && pos3 && r32TeamIds.has(row.team.id)) {
+      // Only the 8 best 3rd-place teams advance to R32; the rest are eliminated.
+      bonus = TEAM_POINTS.thirdQualified;
+    }
 
     if (bonus > 0) {
       points.set(name, (points.get(name) ?? 0) + bonus);
