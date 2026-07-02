@@ -34,6 +34,7 @@ export function Leaderboard({ entries, livePoints }: Props) {
           pickToTeam={livePoints.pickToTeam}
           pickGroupBonus={livePoints.pickGroupBonus}
           pickExcludedFixtures={livePoints.pickExcludedFixtures}
+          eliminatedTeams={livePoints.eliminatedTeams}
         />
       ))}
     </div>

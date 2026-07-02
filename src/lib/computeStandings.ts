@@ -60,6 +60,8 @@ export type StandingsPayload = {
   livePickLabels: string[];
   liveMatchCount: number;
   todayMatchCount: number;
+  // API team names of teams that have been eliminated from the tournament.
+  eliminatedTeams: string[];
   // All tournament fixtures sorted by kickoff — client drives the date strip.
   allFixtures: import('./api').WCEvent[];
   matchImpacts: { event: WCEvent; impacts: PickImpact[] }[];
@@ -253,6 +255,39 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     }
   }
 
+  // Compute eliminated teams. A team is out if:
+  // 1. They didn't qualify from the group stage (not in any R32 fixture), OR
+  // 2. They lost a finished knockout round match.
+  const knockoutRounds = ['round of 32', 'round of 16', 'quarter-final', 'semi-final'];
+  const r32Teams = new Set<string>();
+  for (const f of fixtures) {
+    if (f.round.toLowerCase().includes('round of 32')) {
+      r32Teams.add(f.homeTeam.name);
+      r32Teams.add(f.awayTeam.name);
+    }
+  }
+  // All teams that played in the group stage
+  const groupTeams = new Set<string>();
+  for (const f of fixtures) {
+    if (f.round.toLowerCase().includes('group')) {
+      groupTeams.add(f.homeTeam.name);
+      groupTeams.add(f.awayTeam.name);
+    }
+  }
+  const eliminatedTeams = new Set<string>();
+  // Teams that didn't make R32 are eliminated
+  for (const t of groupTeams) {
+    if (!r32Teams.has(t)) eliminatedTeams.add(t);
+  }
+  // Teams that lost a finished knockout match are eliminated
+  for (const f of fixtures) {
+    const rnd = f.round.toLowerCase();
+    if (!knockoutRounds.some((r) => rnd.includes(r))) continue;
+    if (f.status.type !== 'finished') continue;
+    const homeWon = f.homeScore.current > f.awayScore.current;
+    eliminatedTeams.add(homeWon ? f.awayTeam.name : f.homeTeam.name);
+  }
+
   return {
     updatedPoints: [...updatedPoints],
     pickValues: [...pickValues],
@@ -268,6 +303,7 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     pickToTeam: [...pickToTeam],
     pickGroupBonus: [...pickGroupBonus],
     pickExcludedFixtures: Object.entries(PICK_MATCH_EXCLUSIONS),
+    eliminatedTeams: [...eliminatedTeams],
     lastUpdated: new Date().toISOString(),
     goalSeq,
     goalTeam,

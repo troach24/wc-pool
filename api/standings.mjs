@@ -23017,6 +23017,32 @@ async function computeStandings(entries2) {
       for (const imp of mi.impacts) livePickLabels.add(imp.label);
     }
   }
+  const knockoutRounds = ["round of 32", "round of 16", "quarter-final", "semi-final"];
+  const r32Teams = /* @__PURE__ */ new Set();
+  for (const f of fixtures) {
+    if (f.round.toLowerCase().includes("round of 32")) {
+      r32Teams.add(f.homeTeam.name);
+      r32Teams.add(f.awayTeam.name);
+    }
+  }
+  const groupTeams = /* @__PURE__ */ new Set();
+  for (const f of fixtures) {
+    if (f.round.toLowerCase().includes("group")) {
+      groupTeams.add(f.homeTeam.name);
+      groupTeams.add(f.awayTeam.name);
+    }
+  }
+  const eliminatedTeams = /* @__PURE__ */ new Set();
+  for (const t of groupTeams) {
+    if (!r32Teams.has(t)) eliminatedTeams.add(t);
+  }
+  for (const f of fixtures) {
+    const rnd = f.round.toLowerCase();
+    if (!knockoutRounds.some((r) => rnd.includes(r))) continue;
+    if (f.status.type !== "finished") continue;
+    const homeWon = f.homeScore.current > f.awayScore.current;
+    eliminatedTeams.add(homeWon ? f.awayTeam.name : f.homeTeam.name);
+  }
   return {
     updatedPoints: [...updatedPoints],
     pickValues: [...pickValues],
@@ -23032,6 +23058,7 @@ async function computeStandings(entries2) {
     pickToTeam: [...pickToTeam],
     pickGroupBonus: [...pickGroupBonus],
     pickExcludedFixtures: Object.entries(PICK_MATCH_EXCLUSIONS),
+    eliminatedTeams: [...eliminatedTeams],
     lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
     goalSeq,
     goalTeam,

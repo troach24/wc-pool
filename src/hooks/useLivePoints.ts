@@ -21,6 +21,7 @@ export type LivePointsResult = {
   pickToTeam: Map<string, string>;
   pickGroupBonus: Map<string, number>;
   pickExcludedFixtures: Map<string, number[]>;
+  eliminatedTeams: Set<string>;
   lastUpdated: Date;
   goalSeq: number;
   goalTeam?: string;
@@ -49,6 +50,7 @@ export function useLivePoints() {
         pickToTeam: new Map(p.pickToTeam),
         pickGroupBonus: new Map(p.pickGroupBonus),
         pickExcludedFixtures: new Map(p.pickExcludedFixtures),
+        eliminatedTeams: new Set(p.eliminatedTeams),
         lastUpdated: new Date(p.lastUpdated),
         goalSeq: p.goalSeq,
         goalTeam: p.goalTeam,

@@ -77,15 +77,19 @@ type Props = {
   pickToTeam: Map<string, string>;
   pickGroupBonus: Map<string, number>;
   pickExcludedFixtures: Map<string, number[]>;
+  eliminatedTeams: Set<string>;
 };
 
-export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allFixtures, allMatchImpacts, pickToTeam, pickGroupBonus, pickExcludedFixtures }: Props) {
+export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allFixtures, allMatchImpacts, pickToTeam, pickGroupBonus, pickExcludedFixtures, eliminatedTeams }: Props) {
   const [open, setOpen] = useState(false);
 
   const displayTotal = total;
-  const hasLivePick = [...entry.teams, ...entry.players, ...entry.keepers].some(
-    (p) => livePickLabels.has(p.label)
-  );
+  const allPicks = [...entry.teams, ...entry.players, ...entry.keepers];
+  const hasLivePick = allPicks.some((p) => livePickLabels.has(p.label));
+  const aliveCount = allPicks.filter((p) => {
+    const team = pickToTeam.get(p.label);
+    return team ? !eliminatedTeams.has(team) : false;
+  }).length;
 
   const borderClass =
     rank === 1
@@ -124,6 +128,11 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
             <span className="flex items-center gap-1 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
               live
+            </span>
+          )}
+          {aliveCount > 0 && (
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
+              {aliveCount}/9 alive
             </span>
           )}
           <span className="font-display text-2xl font-bold text-[#1a3a6b] dark:text-blue-300 tabular-nums">
