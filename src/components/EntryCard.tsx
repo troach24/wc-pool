@@ -123,13 +123,15 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
             ℹ️
           </span>
         )}
-        <div className="flex items-center gap-1.5">
-          {hasLivePick && (
-            <span className="flex items-center gap-1 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
-              live
-            </span>
-          )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 justify-end w-[140px]">
+            {hasLivePick && (
+              <span className="flex items-center gap-1 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                live
+              </span>
+            )}
+          </div>
           {aliveCount >= 0 && (
             <span className={`inline-flex items-center justify-center gap-1 text-xs font-bold rounded-full border w-[100px] py-0.5 tabular-nums ${
               aliveCount <= 3
