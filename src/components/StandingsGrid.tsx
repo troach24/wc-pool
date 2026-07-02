@@ -74,8 +74,15 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                         const team = livePoints.pickToTeam.get(p.label);
                         return team ? !livePoints.eliminatedTeams.has(team) : false;
                       }).length;
+                      const color = alive === 0
+                        ? 'text-gray-400 dark:text-gray-600'
+                        : alive <= 3
+                        ? 'text-red-500 dark:text-red-400'
+                        : alive <= 6
+                        ? 'text-yellow-500 dark:text-yellow-400'
+                        : 'text-emerald-600 dark:text-emerald-400';
                       return (
-                        <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">[{alive}/9]</span>
+                        <span className={`text-[10px] font-normal ${color}`}>[{alive}/9]</span>
                       );
                     })()}
                   </td>

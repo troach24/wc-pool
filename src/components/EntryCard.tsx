@@ -131,7 +131,13 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
             </span>
           )}
           {aliveCount > 0 && (
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+              aliveCount <= 3
+                ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
+                : aliveCount <= 6
+                ? 'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
+                : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'
+            }`}>
               {aliveCount}/9 alive
             </span>
           )}
