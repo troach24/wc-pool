@@ -131,7 +131,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
             </span>
           )}
           {aliveCount >= 0 && (
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border min-w-[90px] text-center ${
               aliveCount <= 3
                 ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
                 : aliveCount <= 6
