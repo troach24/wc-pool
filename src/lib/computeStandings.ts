@@ -218,6 +218,8 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     const excl = PICK_MATCH_EXCLUSIONS[label];
     if (excl) {
       pickValues.set(label, pickValueExcluding(lineResults, label, 'keeper', new Set(excl)));
+      const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
+      if (m) { const t = teamOf(m); if (t) pickToTeam.set(label, t); }
     } else {
       const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
       if (m) {

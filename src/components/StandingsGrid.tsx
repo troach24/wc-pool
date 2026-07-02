@@ -69,6 +69,15 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                   {/* Name */}
                   <td className="sticky left-10 z-10 bg-white dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 min-w-[120px] sm:min-w-[180px] max-w-[120px] sm:max-w-none overflow-hidden">
                     <span className="block truncate sm:overflow-visible sm:whitespace-normal">{entry.name}</span>
+                    {(() => {
+                      const alive = allPicks.filter(p => {
+                        const team = livePoints.pickToTeam.get(p.label);
+                        return team ? !livePoints.eliminatedTeams.has(team) : false;
+                      }).length;
+                      return (
+                        <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">[{alive}/9]</span>
+                      );
+                    })()}
                   </td>
                   {/* Picks */}
                   {allPicks.map((pick, i) => {
