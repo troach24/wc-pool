@@ -207,7 +207,11 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
       pickValues.set(label, pickValueExcluding(lineResults, label, 'player', new Set(excl)));
     } else {
       const m = findPlayerByCountry(label, stats.players.keys(), teamOf);
-      if (m) pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
+      if (m) {
+        pickValues.set(label, computePlayerPoints(stats.players.get(m)!));
+        const t = teamOf(m);
+        if (t) pickToTeam.set(label, t);
+      }
     }
   }
   for (const label of keeperLabels) {
@@ -216,7 +220,11 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
       pickValues.set(label, pickValueExcluding(lineResults, label, 'keeper', new Set(excl)));
     } else {
       const m = findPlayerByCountry(label, stats.keepers.keys(), teamOf);
-      if (m) pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
+      if (m) {
+        pickValues.set(label, computeKeeperPoints(stats.keepers.get(m)!));
+        const t = teamOf(m);
+        if (t) pickToTeam.set(label, t);
+      }
     }
   }
 
