@@ -130,7 +130,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
               live
             </span>
           )}
-          {aliveCount > 0 && (
+          {aliveCount >= 0 && (
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
               aliveCount <= 3
                 ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
@@ -138,7 +138,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                 ? 'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
                 : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'
             }`}>
-              {aliveCount <= 3 ? '🚨' : aliveCount <= 6 ? '⚠️' : '⛽'} {aliveCount}/9 alive
+              {aliveCount === 0 ? '🪦' : aliveCount <= 3 ? '🆘' : aliveCount <= 6 ? '😬' : '🔥'} {aliveCount}/9 alive
             </span>
           )}
           <span className="font-display text-2xl font-bold text-[#1a3a6b] dark:text-blue-300 tabular-nums">
