@@ -138,7 +138,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                 ? 'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
                 : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800'
             }`}>
-              <span>{aliveCount === 0 ? '🪦' : aliveCount <= 3 ? '🆘' : aliveCount <= 6 ? '🥵' : '💚'}</span>
+              <span style={{ fontVariantEmoji: 'emoji' }}>{aliveCount === 0 ? '🪦' : aliveCount <= 3 ? '🆘' : aliveCount <= 6 ? '🥵' : '⛽️'}</span>
               <span className="tabular-nums">{aliveCount}/9 alive</span>
             </span>
           )}

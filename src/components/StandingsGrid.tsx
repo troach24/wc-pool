@@ -81,9 +81,9 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                         : alive <= 6
                         ? 'text-yellow-500 dark:text-yellow-400'
                         : 'text-emerald-600 dark:text-emerald-400';
-                      const icon = alive === 0 ? '🪦' : alive <= 3 ? '🆘' : alive <= 6 ? '🥵' : '💚';
+                      const icon = alive === 0 ? '🪦' : alive <= 3 ? '🆘' : alive <= 6 ? '🥵' : '⛽️';
                       return (
-                        <span className={`text-[10px] font-normal ${color}`}><span className="inline-flex w-4 justify-center">{icon}</span>[{alive}/9]</span>
+                        <span className={`text-[10px] font-normal ${color}`}><span className="inline-flex w-4 justify-center" style={{ fontVariantEmoji: 'emoji' }}>{icon}</span>[{alive}/9]</span>
                       );
                     })()}
                   </td>
