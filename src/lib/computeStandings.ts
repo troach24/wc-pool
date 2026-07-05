@@ -111,8 +111,9 @@ async function writeGoalState(goalSeq: number, goalTeam: string | undefined, goa
 // One-off commissioner exceptions: pick label → fixture IDs that must NOT count
 // toward that pick. The commissioner approved a mid-tournament player swap, so
 // the affected pick is credited only from the swap onward. Freese was swapped in
-// after USA's opening match (fixture 1489370 vs Paraguay), so that match's points
-// (a 3-pt win) don't count — leaving his total at 8 from the Australia game.
+// after USA's opening match (fixture 1489370 vs Paraguay, a win with 0 saves and
+// no shutout for him), so that one match's points don't count — every game since
+// counts normally, so his live total keeps growing as USA advances.
 const PICK_MATCH_EXCLUSIONS: Record<string, number[]> = {
   '🇺🇸Freese': [1489370],
 };

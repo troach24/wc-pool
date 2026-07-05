@@ -66,6 +66,7 @@ const GROUP_BONUS_LABELS: Record<number, string> = {
 
 export function PickBreakdownModal({
   label,
+  isTeam,
   allFixtures,
   allMatchImpacts,
   pickToTeam,
@@ -74,6 +75,12 @@ export function PickBreakdownModal({
   onClose,
 }: {
   label: string;
+  // Which pick category this is — must come from the caller (which knows
+  // whether the pick was made from the teams/players/keepers list), NOT
+  // inferred from pickToTeam: that map also resolves a player's/keeper's
+  // national team (for fixture filtering), so a player pick always has an
+  // entry there too and would be misidentified as a team pick.
+  isTeam: boolean;
   allFixtures: WCEvent[];
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
@@ -82,7 +89,6 @@ export function PickBreakdownModal({
   onClose: () => void;
 }) {
   const teamName   = pickToTeam.get(label);
-  const isTeam     = teamName !== undefined;
   const groupBonus = pickGroupBonus.get(label) ?? 0;
   const excluded   = new Set(pickExcludedFixtures.get(label) ?? []);
 

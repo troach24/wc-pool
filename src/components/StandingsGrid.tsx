@@ -17,7 +17,7 @@ type Props = {
 };
 
 export function StandingsGrid({ entries, livePoints }: Props) {
-  const [modalLabel, setModalLabel] = useState<string | null>(null);
+  const [modalPick, setModalPick] = useState<{ label: string; isTeam: boolean } | null>(null);
   const total = (name: string) => livePoints.updatedPoints.get(name) ?? 0;
   const sorted = [...entries].sort((a, b) => total(b.name) - total(a.name));
 
@@ -91,11 +91,12 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                   {allPicks.map((pick, i) => {
                     const value = livePoints.pickValues.get(pick.label) ?? 0;
                     const live = livePoints.livePickLabels.has(pick.label);
+                    const isTeam = i < 3;
                     return (
                       <td key={i} className="px-3 py-2 border-l border-gray-100 dark:border-gray-700">
                         <button
                           className="text-left w-full hover:opacity-70 transition-opacity cursor-pointer"
-                          onClick={() => setModalLabel(pick.label)}
+                          onClick={() => setModalPick({ label: pick.label, isTeam })}
                         >
                           <div className="text-gray-700 dark:text-gray-300">{pick.label}</div>
                           <div className="flex items-center gap-1">
@@ -121,15 +122,16 @@ export function StandingsGrid({ entries, livePoints }: Props) {
         </table>
       </div>
 
-      {modalLabel && (
+      {modalPick && (
         <PickBreakdownModal
-          label={modalLabel}
+          label={modalPick.label}
+          isTeam={modalPick.isTeam}
           allFixtures={livePoints.allFixtures}
           allMatchImpacts={livePoints.allMatchImpacts}
           pickToTeam={livePoints.pickToTeam}
           pickGroupBonus={livePoints.pickGroupBonus}
           pickExcludedFixtures={livePoints.pickExcludedFixtures}
-          onClose={() => setModalLabel(null)}
+          onClose={() => setModalPick(null)}
         />
       )}
     </>

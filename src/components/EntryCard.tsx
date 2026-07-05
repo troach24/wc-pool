@@ -12,6 +12,7 @@ function PickChip({
   label,
   value,
   live,
+  isTeam,
   allFixtures,
   allMatchImpacts,
   pickToTeam,
@@ -21,6 +22,7 @@ function PickChip({
   label: string;
   value: number;
   live: boolean;
+  isTeam: boolean;
   allFixtures: WCEvent[];
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
@@ -54,6 +56,7 @@ function PickChip({
       {showModal && (
         <PickBreakdownModal
           label={label}
+          isTeam={isTeam}
           allFixtures={allFixtures}
           allMatchImpacts={allMatchImpacts}
           pickToTeam={pickToTeam}
@@ -172,6 +175,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   label={p.label}
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
+                  isTeam={true}
                   allFixtures={allFixtures}
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
@@ -190,6 +194,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   label={p.label}
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
+                  isTeam={false}
                   allFixtures={allFixtures}
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
@@ -208,6 +213,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   label={p.label}
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
+                  isTeam={false}
                   allFixtures={allFixtures}
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
