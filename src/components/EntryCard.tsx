@@ -39,7 +39,7 @@ function PickChip({
         className="w-full flex items-center justify-between gap-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1 -mx-1 transition-colors"
         onClick={() => setShowModal(true)}
       >
-        <span className={`text-sm text-left ${eliminated ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>{label}</span>
+        <span className={`text-sm text-left text-gray-700 dark:text-gray-300 ${eliminated ? 'line-through' : ''}`}>{label}</span>
         <div className="flex items-center gap-1 flex-shrink-0">
           {live && (
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" title="scoring live" />

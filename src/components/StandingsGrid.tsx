@@ -100,7 +100,7 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                           className="text-left w-full hover:opacity-70 transition-opacity cursor-pointer"
                           onClick={() => setModalPick({ label: pick.label, isTeam })}
                         >
-                          <div className={eliminated ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'}>{pick.label}</div>
+                          <div className={`text-gray-700 dark:text-gray-300 ${eliminated ? 'line-through' : ''}`}>{pick.label}</div>
                           <div className="flex items-center gap-1">
                             <span className={`font-bold ${value === 0 ? 'text-gray-300 dark:text-gray-600' : 'text-blue-600 dark:text-blue-400'}`}>
                               +{value}
