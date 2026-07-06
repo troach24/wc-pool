@@ -49,7 +49,7 @@ async function linesFor(event: WCEvent): Promise<PlayerLine[]> {
   if (event.status.type === 'finished' && finishedLineCache.has(event.id)) {
     return finishedLineCache.get(event.id)!;
   }
-  const lines = await fetchFixturePlayers(event.id);
+  const lines = applyStatCorrections(event.id, await fetchFixturePlayers(event.id));
   if (event.status.type === 'finished') finishedLineCache.set(event.id, lines);
   return lines;
 }
@@ -106,6 +106,30 @@ async function writeGoalState(goalSeq: number, goalTeam: string | undefined, goa
   const sb = makeSupabase();
   if (!sb) return;
   await sb.from('goal_state').update({ goal_seq: goalSeq, goal_team: goalTeam ?? null, goal_at: goalAt ?? null, prev_scores: prevScores }).eq('id', 1);
+}
+
+// One-off API data corrections: fixture ID + player name → stat overrides.
+// API-Football misattributed a yellow card to Harry Kane in the Mexico vs
+// England group match (fixture 1570714) — it wasn't actually his card, so we
+// zero it out at the source, before it ever reaches scoring. Unlike the
+// whole-match pick exclusions below, this only touches the one stat that was
+// wrong and leaves any real goals/assists/etc. from that match intact.
+const STAT_CORRECTIONS: {
+  fixtureId: number;
+  playerName: string;
+  stat: 'goals' | 'assists' | 'yellow' | 'red' | 'saves';
+  value: number;
+}[] = [
+  { fixtureId: 1570714, playerName: 'Harry Kane', stat: 'yellow', value: 0 },
+];
+
+function applyStatCorrections(fixtureId: number, lines: PlayerLine[]): PlayerLine[] {
+  const corrections = STAT_CORRECTIONS.filter((c) => c.fixtureId === fixtureId);
+  if (!corrections.length) return lines;
+  return lines.map((line) => {
+    const c = corrections.find((c) => c.playerName === line.name);
+    return c ? { ...line, [c.stat]: c.value } : line;
+  });
 }
 
 // One-off commissioner exceptions: pick label → fixture IDs that must NOT count
