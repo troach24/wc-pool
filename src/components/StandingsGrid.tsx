@@ -92,13 +92,15 @@ export function StandingsGrid({ entries, livePoints }: Props) {
                     const value = livePoints.pickValues.get(pick.label) ?? 0;
                     const live = livePoints.livePickLabels.has(pick.label);
                     const isTeam = i < 3;
+                    const pickTeam = livePoints.pickToTeam.get(pick.label);
+                    const eliminated = pickTeam ? livePoints.eliminatedTeams.has(pickTeam) : false;
                     return (
                       <td key={i} className="px-3 py-2 border-l border-gray-100 dark:border-gray-700">
                         <button
                           className="text-left w-full hover:opacity-70 transition-opacity cursor-pointer"
                           onClick={() => setModalPick({ label: pick.label, isTeam })}
                         >
-                          <div className="text-gray-700 dark:text-gray-300">{pick.label}</div>
+                          <div className={eliminated ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'}>{pick.label}</div>
                           <div className="flex items-center gap-1">
                             <span className={`font-bold ${value === 0 ? 'text-gray-300 dark:text-gray-600' : 'text-blue-600 dark:text-blue-400'}`}>
                               +{value}

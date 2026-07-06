@@ -13,6 +13,7 @@ function PickChip({
   value,
   live,
   isTeam,
+  eliminated,
   allFixtures,
   allMatchImpacts,
   pickToTeam,
@@ -23,6 +24,7 @@ function PickChip({
   value: number;
   live: boolean;
   isTeam: boolean;
+  eliminated: boolean;
   allFixtures: WCEvent[];
   allMatchImpacts: MatchImpact[];
   pickToTeam: Map<string, string>;
@@ -37,7 +39,7 @@ function PickChip({
         className="w-full flex items-center justify-between gap-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1 -mx-1 transition-colors"
         onClick={() => setShowModal(true)}
       >
-        <span className="text-sm text-gray-700 dark:text-gray-300 text-left">{label}</span>
+        <span className={`text-sm text-left ${eliminated ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>{label}</span>
         <div className="flex items-center gap-1 flex-shrink-0">
           {live && (
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" title="scoring live" />
@@ -89,10 +91,11 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
   const displayTotal = total;
   const allPicks = [...entry.teams, ...entry.players, ...entry.keepers];
   const hasLivePick = allPicks.some((p) => livePickLabels.has(p.label));
-  const aliveCount = allPicks.filter((p) => {
-    const team = pickToTeam.get(p.label);
-    return team ? !eliminatedTeams.has(team) : false;
-  }).length;
+  const isEliminated = (label: string) => {
+    const team = pickToTeam.get(label);
+    return team ? eliminatedTeams.has(team) : false;
+  };
+  const aliveCount = allPicks.filter((p) => !isEliminated(p.label)).length;
 
   const borderClass =
     rank === 1
@@ -176,6 +179,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
                   isTeam={true}
+                  eliminated={isEliminated(p.label)}
                   allFixtures={allFixtures}
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
@@ -195,6 +199,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
                   isTeam={false}
+                  eliminated={isEliminated(p.label)}
                   allFixtures={allFixtures}
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
@@ -214,6 +219,7 @@ export function EntryCard({ entry, rank, total, pickValues, livePickLabels, allF
                   value={pickValues.get(p.label) ?? 0}
                   live={livePickLabels.has(p.label)}
                   isTeam={false}
+                  eliminated={isEliminated(p.label)}
                   allFixtures={allFixtures}
                   allMatchImpacts={allMatchImpacts}
                   pickToTeam={pickToTeam}
