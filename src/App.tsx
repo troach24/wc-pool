@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { VerifiedBanner } from './components/VerifiedBanner';
@@ -28,6 +28,22 @@ function PoolApp() {
   );
   const [page, setPage] = useState<'standings' | 'schedule' | 'chat'>('standings');
   const [unreadChat, setUnreadChat] = useState(false);
+  const [search, setSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredEntries = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return entries;
+    return entries.filter((entry) => {
+      const picks = [...entry.teams, ...entry.players, ...entry.keepers];
+      return picks.some((pick) => pick.label.toLowerCase().includes(q));
+    });
+  }, [search]);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
 
   // Fire the goal animation when client-side score diffing detects a new goal.
   // lastCelebrated is a session ref — resets on page load so no stale replays.
@@ -125,15 +141,67 @@ function PoolApp() {
               Grid view best on wider screens
             </span>
           )}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                setSearchOpen((o) => {
+                  const next = !o;
+                  if (!next) setSearch('');
+                  return next;
+                });
+              }}
+              aria-expanded={searchOpen}
+              aria-label="Search"
+              className={`flex items-center justify-center rounded-lg border p-1.5 text-sm transition-colors ${
+                searchOpen
+                  ? 'border-[#1a3a6b]/40 bg-[#1a3a6b]/10 text-[#1a3a6b] dark:border-blue-400/40 dark:bg-blue-400/10 dark:text-blue-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+            >
+              🔍
+            </button>
             <RulesPopover />
           </div>
         </div>
 
+        {/* Search */}
+        {searchOpen && (
+          <div className="relative mb-3">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setSearch('');
+                  setSearchOpen(false);
+                }
+              }}
+              placeholder="Search teams, players, keepers…"
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 pr-8 text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] dark:focus:ring-blue-500"
+            />
+            <button
+              onClick={() => {
+                if (search) setSearch('');
+                else setSearchOpen(false);
+              }}
+              aria-label={search ? 'Clear search' : 'Close search'}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {livePoints ? (
-          view === 'cards'
-            ? <Leaderboard entries={entries} livePoints={livePoints} />
-            : <StandingsGrid entries={entries} livePoints={livePoints} />
+          filteredEntries.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+              No matches for "{search}"
+            </div>
+          ) : view === 'cards'
+            ? <Leaderboard entries={filteredEntries} livePoints={livePoints} />
+            : <StandingsGrid entries={filteredEntries} livePoints={livePoints} />
         ) : isError ? (
           <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-6 text-center text-sm text-red-700 dark:text-red-300">
             Couldn't reach the live stats feed. Retrying…
