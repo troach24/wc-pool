@@ -319,7 +319,11 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
     const rnd = f.round.toLowerCase();
     if (!knockoutRounds.some((r) => rnd.includes(r))) continue;
     if (f.status.type !== 'finished') continue;
-    const homeWon = f.homeScore.current > f.awayScore.current;
+    // A drawn knockout match is decided on penalties — fall back to that score.
+    const homeWon =
+      f.homeScore.current !== f.awayScore.current
+        ? f.homeScore.current > f.awayScore.current
+        : (f.penaltyScore?.home ?? 0) > (f.penaltyScore?.away ?? 0);
     eliminatedTeams.add(homeWon ? f.awayTeam.name : f.homeTeam.name);
   }
 
