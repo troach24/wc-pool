@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   accumulateLines,
+  computePlayerPoints,
   computeTeamPointsFromStats,
   findPlayerByCountry,
   matchWinner,
   roundResultPoints,
 } from '../src/lib/pointCalc.ts';
 import { matchesApiName } from '../src/lib/nameMap.ts';
-import { TEAM_POINTS } from '../src/lib/scoring.ts';
+import { PLAYER_POINTS, TEAM_POINTS } from '../src/lib/scoring.ts';
 import type { WCEvent } from '../src/lib/api.ts';
 
 function event(over: Partial<WCEvent> = {}): WCEvent {
@@ -103,5 +104,20 @@ test('the final pays the winner and the runner-up', () => {
   assert.equal(
     computeTeamPointsFromStats(stats.teams.get('Away')!),
     1 * TEAM_POINTS.goal + TEAM_POINTS.runnerUp
+  );
+});
+
+test('a second-yellow red card only scores one yellow plus the red, not two yellows', () => {
+  // API-Football reports yellowCards=2, redCards=1 for a second-yellow dismissal.
+  assert.equal(
+    computePlayerPoints({ goals: 0, assists: 0, yellowCards: 2, redCards: 1 }),
+    PLAYER_POINTS.yellowCard + PLAYER_POINTS.redCard
+  );
+});
+
+test('a straight red with no prior yellow still scores the red alone', () => {
+  assert.equal(
+    computePlayerPoints({ goals: 0, assists: 0, yellowCards: 0, redCards: 1 }),
+    PLAYER_POINTS.redCard
   );
 });

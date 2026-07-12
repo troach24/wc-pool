@@ -207,11 +207,18 @@ export function accumulateLines(
   return { players, keepers, teams, playerTeam };
 }
 
+// A second yellow card always converts to a red in the same match, so the API
+// reports yellowCards=2 for that dismissal — only the first yellow is a
+// separate scoring event; the second is subsumed by the red. Cap at 1/match.
+function scoredYellowCards(stats: PlayerStats): number {
+  return Math.min(stats.yellowCards, 1);
+}
+
 export function computePlayerPoints(stats: PlayerStats): number {
   return (
     stats.goals * PLAYER_POINTS.goal +
     stats.assists * PLAYER_POINTS.assist +
-    stats.yellowCards * PLAYER_POINTS.yellowCard +
+    scoredYellowCards(stats) * PLAYER_POINTS.yellowCard +
     stats.redCards * PLAYER_POINTS.redCard
   );
 }
@@ -351,10 +358,11 @@ export type BreakdownItem = { label: string; points: number; color: string };
 
 function playerBreakdown(stats: PlayerStats): BreakdownItem[] {
   const items: BreakdownItem[] = [];
-  if (stats.goals > 0)       items.push({ label: `${stats.goals} goal${stats.goals !== 1 ? 's' : ''}`, points: stats.goals * PLAYER_POINTS.goal, color: 'green' });
-  if (stats.assists > 0)     items.push({ label: `${stats.assists} assist${stats.assists !== 1 ? 's' : ''}`, points: stats.assists * PLAYER_POINTS.assist, color: 'sky' });
-  if (stats.yellowCards > 0) items.push({ label: `${stats.yellowCards} yellow card${stats.yellowCards !== 1 ? 's' : ''}`, points: stats.yellowCards * PLAYER_POINTS.yellowCard, color: 'amber' });
-  if (stats.redCards > 0)    items.push({ label: `${stats.redCards} red card${stats.redCards !== 1 ? 's' : ''}`, points: stats.redCards * PLAYER_POINTS.redCard, color: 'red' });
+  const yellows = scoredYellowCards(stats);
+  if (stats.goals > 0)    items.push({ label: `${stats.goals} goal${stats.goals !== 1 ? 's' : ''}`, points: stats.goals * PLAYER_POINTS.goal, color: 'green' });
+  if (stats.assists > 0)  items.push({ label: `${stats.assists} assist${stats.assists !== 1 ? 's' : ''}`, points: stats.assists * PLAYER_POINTS.assist, color: 'sky' });
+  if (yellows > 0)        items.push({ label: `${yellows} yellow card${yellows !== 1 ? 's' : ''}`, points: yellows * PLAYER_POINTS.yellowCard, color: 'amber' });
+  if (stats.redCards > 0) items.push({ label: `${stats.redCards} red card${stats.redCards !== 1 ? 's' : ''}`, points: stats.redCards * PLAYER_POINTS.redCard, color: 'red' });
   return items;
 }
 
