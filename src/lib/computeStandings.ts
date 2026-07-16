@@ -314,10 +314,13 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
   for (const t of groupTeams) {
     if (!r32Teams.has(t)) eliminatedTeams.add(t);
   }
-  // Teams that lost a finished knockout match are eliminated
+  // Teams that lost a finished knockout match are eliminated — except
+  // semi-final losers, who still have the 3rd-place match to play before
+  // they're actually out.
   for (const f of fixtures) {
     const rnd = f.round.toLowerCase();
     if (!knockoutRounds.some((r) => rnd.includes(r))) continue;
+    if (rnd.includes('semi-final')) continue;
     if (f.status.type !== 'finished') continue;
     // A drawn knockout match is decided on penalties — fall back to that score.
     const homeWon =
@@ -325,6 +328,15 @@ export async function computeStandings(entries: Entry[]): Promise<StandingsPaylo
         ? f.homeScore.current > f.awayScore.current
         : (f.penaltyScore?.home ?? 0) > (f.penaltyScore?.away ?? 0);
     eliminatedTeams.add(homeWon ? f.awayTeam.name : f.homeTeam.name);
+  }
+  // The 3rd-place match settles both semi-final losers at once — once it's
+  // finished, neither team (winner or loser of that match) has games left.
+  for (const f of fixtures) {
+    const rnd = f.round.toLowerCase();
+    if (!rnd.includes('place')) continue;
+    if (f.status.type !== 'finished') continue;
+    eliminatedTeams.add(f.homeTeam.name);
+    eliminatedTeams.add(f.awayTeam.name);
   }
 
   return {
